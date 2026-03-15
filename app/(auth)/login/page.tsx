@@ -79,7 +79,7 @@ export default function LoginPage() {
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button
                 type="submit"
-                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                className="w-full h-9 px-4 rounded-md bg-indigo-600 hover:bg-indigo-700"
                 disabled={loading}
               >
                 {loading ? "Sending…" : "Send Magic Link"}

@@ -14,12 +14,12 @@ export default async function AppLayout({
 
   return (
     <div className="min-h-screen bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
+      <header className="h-14 sticky top-0 z-40 border-b border-zinc-200 bg-white">
+        <div className="mx-auto max-w-7xl px-6 h-full flex items-center justify-between">
           <span className="font-bold text-zinc-900 text-lg">BidBoard</span>
         </div>
       </header>
-      <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+      <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
     </div>
   );
 }

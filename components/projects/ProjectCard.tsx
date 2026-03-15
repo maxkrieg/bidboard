@@ -20,7 +20,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   return (
     <Link href={`/projects/${project.id}`}>
-      <Card className="border border-zinc-200 bg-white hover:shadow-md transition-shadow cursor-pointer h-full">
+      <Card className="border border-zinc-200 bg-white shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer h-full">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-base font-semibold text-zinc-900 leading-tight">

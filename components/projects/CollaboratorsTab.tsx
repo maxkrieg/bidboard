@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import type { CollaboratorWithUser } from "@/types";
@@ -90,14 +90,9 @@ export function CollaboratorsTab({
                         </p>
                       )}
                     </div>
-                    <Badge
-                      variant={
-                        c.status === "accepted" ? "default" : "secondary"
-                      }
-                      className="text-xs shrink-0"
-                    >
-                      {c.status === "accepted" ? "Accepted" : "Pending"}
-                    </Badge>
+                    <StatusBadge
+                      status={c.status === "accepted" ? "accepted" : "pending"}
+                    />
                   </li>
                 );
               })}

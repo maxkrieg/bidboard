@@ -1,9 +1,10 @@
 import Link from "next/link";
+import { FolderOpen } from "lucide-react";
 import { createServerClient } from "@/lib/supabase/server";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 
 const btnCls =
-  "inline-flex items-center justify-center rounded-lg px-3 h-8 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors";
+  "inline-flex items-center justify-center rounded-md px-4 h-9 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors";
 
 export default async function DashboardPage() {
   const supabase = await createServerClient();
@@ -29,11 +30,12 @@ export default async function DashboardPage() {
       </div>
 
       {allProjects.length === 0 ? (
-        <div className="text-center py-20 text-zinc-500">
-          <p className="text-lg font-medium text-zinc-700 mb-2">
+        <div className="text-center py-20">
+          <FolderOpen className="h-10 w-10 text-zinc-300 mx-auto mb-4" />
+          <p className="text-sm font-medium text-zinc-900 mb-1">
             No projects yet
           </p>
-          <p className="mb-6">
+          <p className="text-sm text-zinc-500 mb-6">
             Create your first project to start collecting bids.
           </p>
           <Link href="/projects/new" className={btnCls}>

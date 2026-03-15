@@ -47,6 +47,13 @@ export type Database = {
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "project_collaborators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
         ]
       }
       projects: {
@@ -114,7 +121,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      current_user_owns_project: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

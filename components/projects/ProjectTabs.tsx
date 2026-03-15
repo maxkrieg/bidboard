@@ -24,25 +24,42 @@ export function ProjectTabs({
 }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="bids">
-      <TabsList>
-        <TabsTrigger value="bids">Bids</TabsTrigger>
-        <TabsTrigger value="messages">Messages</TabsTrigger>
-        <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
-      </TabsList>
+      <div className="border-b border-zinc-200 mb-6">
+        <TabsList className="gap-0 p-0 h-auto rounded-none w-full justify-start bg-transparent">
+          <TabsTrigger
+            value="bids"
+            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+          >
+            Bids
+          </TabsTrigger>
+          <TabsTrigger
+            value="messages"
+            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+          >
+            Messages
+          </TabsTrigger>
+          <TabsTrigger
+            value="collaborators"
+            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+          >
+            Collaborators
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
-      <TabsContent value="bids" className="mt-6">
+      <TabsContent value="bids" className="">
         <p className="text-zinc-500 text-sm">
           Bids will appear here. (Coming in Phase 3)
         </p>
       </TabsContent>
 
-      <TabsContent value="messages" className="mt-6">
+      <TabsContent value="messages" className="">
         <p className="text-zinc-500 text-sm">
           Messages will appear here. (Coming in Phase 6)
         </p>
       </TabsContent>
 
-      <TabsContent value="collaborators" className="mt-6">
+      <TabsContent value="collaborators" className="">
         <CollaboratorsTab
           projectId={project.id}
           isOwner={isOwner}
