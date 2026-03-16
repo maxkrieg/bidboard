@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   const { data: projects } = await supabase
     .from("projects")
-    .select("*")
+    .select("*, bids(id)")
     .order("created_at", { ascending: false });
 
   const allProjects = projects ?? [];
@@ -50,7 +50,7 @@ export default async function DashboardPage() {
               project={{
                 ...project,
                 status: project.status as "active" | "archived",
-                bid_count: [],
+                bid_count: project.bids?.length ?? 0,
               }}
             />
           ))}

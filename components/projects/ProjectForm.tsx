@@ -79,7 +79,7 @@ export function ProjectForm() {
       <Button
         type="submit"
         disabled={isPending}
-        className="w-full h-9 px-4 rounded-md bg-indigo-600 hover:bg-indigo-700"
+        className="w-full"
       >
         {isPending ? "Creating…" : "Create Project"}
       </Button>

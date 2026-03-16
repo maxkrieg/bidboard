@@ -76,13 +76,13 @@ export default async function BidDetailPage({
               </h3>
               <StatusBadge status={bid.status} />
             </div>
+            <div className="mb-4">
+              <p className="text-zinc-400 text-xs mb-0.5">Total Price</p>
+              <p className="text-3xl font-bold text-zinc-900">
+                {formatCurrency(bid.total_price)}
+              </p>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-zinc-400 text-xs mb-0.5">Total Price</p>
-                <p className="font-semibold text-zinc-900 text-lg">
-                  {formatCurrency(bid.total_price)}
-                </p>
-              </div>
               {bid.estimated_days && (
                 <div>
                   <p className="text-zinc-400 text-xs mb-0.5">Duration</p>
@@ -114,6 +114,14 @@ export default async function BidDetailPage({
             )}
           </div>
 
+          {/* Status actions */}
+          <div className="rounded-lg border border-zinc-200 bg-white p-4">
+            <h3 className="text-base font-semibold text-zinc-900 mb-3">
+              Status
+            </h3>
+            <BidStatusActions bid={bid} projectId={id} />
+          </div>
+
           {/* Line items */}
           {bid.line_items.length > 0 && (
             <div className="rounded-lg border border-zinc-200 bg-white p-4">
@@ -143,22 +151,26 @@ export default async function BidDetailPage({
               documents={bid.documents}
             />
           </div>
-
-          {/* Status actions */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="text-base font-semibold text-zinc-900 mb-3">
-              Status
-            </h3>
-            <BidStatusActions bid={bid} projectId={id} />
-          </div>
         </div>
 
-        {/* Right column — comments placeholder (Phase 6) */}
+        {/* Right column — comments skeleton (Phase 6) */}
         <div className="mt-6 lg:mt-0">
-          <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-            <p className="text-sm text-zinc-400 text-center py-8">
-              Comments coming in Phase 6
-            </p>
+          <div className="rounded-lg border border-zinc-200 bg-white p-4">
+            <h3 className="text-base font-semibold text-zinc-900 mb-4">
+              Comments
+            </h3>
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-3 animate-pulse">
+                  <div className="w-7 h-7 rounded-full bg-zinc-100 shrink-0" />
+                  <div className="flex-1 space-y-2 pt-0.5">
+                    <div className="h-2.5 w-20 rounded bg-zinc-100" />
+                    <div className="h-2.5 w-full rounded bg-zinc-100" />
+                    <div className="h-2.5 w-4/5 rounded bg-zinc-100" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

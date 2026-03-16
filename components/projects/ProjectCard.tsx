@@ -11,23 +11,21 @@ import type { Project } from "@/types";
 
 interface ProjectCardProps {
   project: Project & {
-    bid_count: { count: number }[];
+    bid_count: number;
   };
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const bidCount = project.bid_count?.[0]?.count ?? 0;
-
   return (
     <Link href={`/projects/${project.id}`}>
-      <Card className="border border-zinc-200 bg-white shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer h-full">
+      <Card className="border border-zinc-200 border-l-2 border-l-indigo-500 bg-white shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer h-full">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-base font-semibold text-zinc-900 leading-tight">
               {project.name}
             </CardTitle>
-            <Badge variant="secondary" className="shrink-0 text-xs">
-              {bidCount} {bidCount === 1 ? "bid" : "bids"}
+            <Badge className="shrink-0 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-0">
+              {project.bid_count} {project.bid_count === 1 ? "bid" : "bids"}
             </Badge>
           </div>
         </CardHeader>

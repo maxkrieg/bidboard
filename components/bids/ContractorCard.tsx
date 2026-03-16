@@ -56,20 +56,17 @@ export function ContractorCard({ contractor }: ContractorCardProps) {
         )}
       </ul>
 
-      {/* Enrichment placeholders — populated in Phase 4 */}
+      {/* Enrichment section — populated in Phase 4 */}
       <div className="mt-4 pt-4 border-t border-zinc-100 grid grid-cols-3 gap-3 text-center">
-        <div>
-          <p className="text-xs text-zinc-400 mb-0.5">Google</p>
-          <p className="text-sm font-medium text-zinc-400">—</p>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-400 mb-0.5">BBB</p>
-          <p className="text-sm font-medium text-zinc-400">—</p>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-400 mb-0.5">License</p>
-          <p className="text-sm font-medium text-zinc-400">—</p>
-        </div>
+        {(["Google", "BBB", "License"] as const).map((label) => (
+          <div key={label}>
+            <p className="text-xs text-zinc-400 mb-1.5">{label}</p>
+            <div className="animate-pulse space-y-1.5 flex flex-col items-center">
+              <div className="h-3 w-10 rounded bg-zinc-100" />
+            </div>
+            <p className="text-xs text-zinc-300 mt-1">Pending research</p>
+          </div>
+        ))}
       </div>
     </div>
   );
