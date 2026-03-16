@@ -14,6 +14,187 @@ export type Database = {
   }
   public: {
     Tables: {
+      bid_documents: {
+        Row: {
+          bid_id: string
+          created_at: string
+          filename: string
+          id: string
+          storage_path: string
+        }
+        Insert: {
+          bid_id: string
+          created_at?: string
+          filename: string
+          id?: string
+          storage_path: string
+        }
+        Update: {
+          bid_id?: string
+          created_at?: string
+          filename?: string
+          id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_documents_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "bids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bid_line_items: {
+        Row: {
+          bid_id: string
+          created_at: string
+          description: string
+          id: string
+          quantity: number
+          unit: string | null
+          unit_price: number
+        }
+        Insert: {
+          bid_id: string
+          created_at?: string
+          description: string
+          id?: string
+          quantity?: number
+          unit?: string | null
+          unit_price: number
+        }
+        Update: {
+          bid_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          quantity?: number
+          unit?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_line_items_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "bids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bids: {
+        Row: {
+          bid_date: string
+          contractor_id: string
+          created_at: string
+          estimated_days: number | null
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          status: string
+          total_price: number
+        }
+        Insert: {
+          bid_date: string
+          contractor_id: string
+          created_at?: string
+          estimated_days?: number | null
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          status?: string
+          total_price: number
+        }
+        Update: {
+          bid_date?: string
+          contractor_id?: string
+          created_at?: string
+          estimated_days?: number | null
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          status?: string
+          total_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bids_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contractors: {
+        Row: {
+          address: string | null
+          bbb_accredited: boolean | null
+          bbb_rating: string | null
+          created_at: string
+          email: string | null
+          enriched_at: string | null
+          google_place_id: string | null
+          google_rating: number | null
+          google_review_count: number | null
+          id: string
+          license_number: string | null
+          license_status: string | null
+          location: string | null
+          name: string
+          phone: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          bbb_accredited?: boolean | null
+          bbb_rating?: string | null
+          created_at?: string
+          email?: string | null
+          enriched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_review_count?: number | null
+          id?: string
+          license_number?: string | null
+          license_status?: string | null
+          location?: string | null
+          name: string
+          phone?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          bbb_accredited?: boolean | null
+          bbb_rating?: string | null
+          created_at?: string
+          email?: string | null
+          enriched_at?: string | null
+          google_place_id?: string | null
+          google_rating?: number | null
+          google_review_count?: number | null
+          id?: string
+          license_number?: string | null
+          license_status?: string | null
+          location?: string | null
+          name?: string
+          phone?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       project_collaborators: {
         Row: {
           created_at: string
@@ -122,6 +303,10 @@ export type Database = {
     }
     Functions: {
       current_user_owns_project: {
+        Args: { p_project_id: string }
+        Returns: boolean
+      }
+      is_project_member: {
         Args: { p_project_id: string }
         Returns: boolean
       }

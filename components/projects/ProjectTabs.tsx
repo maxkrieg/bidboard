@@ -7,6 +7,7 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { CollaboratorsTab } from "./CollaboratorsTab";
+import { BidsTab } from "./BidsTab";
 import type { ProjectWithMeta } from "@/types";
 
 interface ProjectTabsProps {
@@ -48,9 +49,7 @@ export function ProjectTabs({
       </div>
 
       <TabsContent value="bids" className="">
-        <p className="text-zinc-500 text-sm">
-          Bids will appear here. (Coming in Phase 3)
-        </p>
+        <BidsTab projectId={project.id} bids={project.bids} />
       </TabsContent>
 
       <TabsContent value="messages" className="">

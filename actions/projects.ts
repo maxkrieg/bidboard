@@ -117,16 +117,23 @@ export async function getProjectById(
       collaborators:project_collaborators (
         *,
         users ( full_name, email, avatar_url )
+      ),
+      bids (
+        *,
+        contractor:contractors (*),
+        line_items:bid_line_items (*),
+        documents:bid_documents (*)
       )
     `
     )
     .eq("id", projectId)
     .single();
-  
+
   if (error || !data) {
     return { success: false, error: "Project not found." };
   }
 
+  const bids = (data.bids as unknown as ProjectWithMeta["bids"]) ?? [];
 
   return {
     success: true,
@@ -136,7 +143,8 @@ export async function getProjectById(
       collaborators: (
         data.collaborators as unknown as ProjectWithMeta["collaborators"]
       ),
-      bid_count: 0, // updated in Phase 3 when bids table exists
+      bid_count: bids.length,
+      bids,
     },
   };
 }
