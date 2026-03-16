@@ -10,7 +10,7 @@ This file defines conventions, architecture, and guidance for AI coding agents (
 **Purpose:** A collaborative web app for homeowners to collect, compare, and analyze contractor bids for home improvement projects. Multiple users can be invited to a project to view bids, discuss via comments and messaging, and leverage AI-powered analysis.
 
 **Stack:**
-- **Frontend + API:** Next.js 14 (App Router) with TypeScript
+- **Frontend + API:** Next.js 16 (App Router) with TypeScript
 - **Styling:** Tailwind CSS + shadcn/ui components
 - **Database + Auth + Realtime + Storage:** Supabase
 - **AI Analysis:** Anthropic Claude API
@@ -27,44 +27,72 @@ This file defines conventions, architecture, and guidance for AI coding agents (
 │   ├── (auth)/
 │   │   └── login/              # Magic link login page
 │   ├── (app)/
+│   │   ├── layout.tsx          # Auth guard + app shell (navbar)
 │   │   ├── dashboard/          # Project list
 │   │   ├── projects/
 │   │   │   ├── new/            # Create project form
 │   │   │   └── [id]/
-│   │   │       ├── page.tsx    # Project view (bids tab default)
-│   │   │       ├── compare/    # Side-by-side bid comparison
+│   │   │       ├── page.tsx    # Project view — Bids / Messages / Collaborators tabs
+│   │   │       ├── compare/    # Side-by-side bid comparison table
 │   │   │       └── bids/
-│   │   │           └── [bidId]/  # Bid detail + comments
+│   │   │           ├── new/            # Add bid form
+│   │   │           └── [bidId]/
+│   │   │               ├── page.tsx    # Bid detail + comments (Phase 6)
+│   │   │               └── edit/       # Edit bid form
 │   └── api/
-│       ├── enrich-contractor/  # Google Places enrichment
-│       ├── analyze-bids/       # Claude AI analysis
-│       └── notifications/      # Email notification triggers
+│       ├── enrich-contractor/  # Google Places + Firecrawl enrichment (stub until Phase 4)
+│       ├── analyze-bids/       # Claude AI analysis (Phase 5)
+│       └── notifications/      # Email notification triggers (Phase 7)
 ├── components/
 │   ├── ui/                     # shadcn/ui base components (do not edit)
 │   ├── bids/                   # Bid-specific components
+│   │   ├── BidCard.tsx
+│   │   ├── BidDocuments.tsx
+│   │   ├── BidForm.tsx
+│   │   ├── BidStatusActions.tsx
+│   │   ├── ComparisonTable.tsx
+│   │   ├── ContractorCard.tsx
+│   │   ├── DeleteBidButton.tsx
+│   │   └── LineItemsTable.tsx
 │   ├── projects/               # Project-specific components
-│   ├── comments/               # Comment thread components
-│   ├── messages/               # Project messaging components
-│   └── shared/                 # Layout, navbar, cards, badges
+│   │   ├── ArchiveDropdown.tsx
+│   │   ├── BidsTab.tsx
+│   │   ├── CollaboratorsTab.tsx
+│   │   ├── ProjectCard.tsx
+│   │   ├── ProjectForm.tsx
+│   │   └── ProjectTabs.tsx
+│   ├── comments/               # Comment thread components (Phase 6)
+│   ├── messages/               # Project messaging components (Phase 6)
+│   └── shared/
+│       └── StatusBadge.tsx     # Reusable pending/accepted/rejected badge
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts           # Browser Supabase client
-│   │   ├── server.ts           # Server Supabase client
-│   │   └── types.ts            # Generated DB types
-│   ├── claude.ts               # Anthropic client + prompt functions
-│   ├── google-places.ts        # Google Places API helpers
-│   ├── firecrawl.ts            # Firecrawl scraping helpers
+│   │   ├── server.ts           # Server Supabase client (cookie-based session)
+│   │   ├── admin.ts            # Service-role client — bypasses RLS, server-only
+│   │   └── types.ts            # DB types (manually maintained — see note below)
+│   ├── claude.ts               # Anthropic client + prompt functions (Phase 5)
+│   ├── google-places.ts        # Google Places API helpers (Phase 4)
+│   ├── firecrawl.ts            # Firecrawl scraping helpers (Phase 4)
 │   └── utils.ts                # Shared utility functions
-├── actions/                    # Next.js Server Actions
-│   ├── projects.ts
-│   ├── bids.ts
-│   ├── comments.ts
-│   ├── messages.ts
-│   └── collaborators.ts
-├── types/                      # Shared TypeScript types
+├── actions/                    # Next.js Server Actions (mutations only)
+│   ├── projects.ts             # createProject, archiveProject, getProjectById
+│   ├── bids.ts                 # createBid, updateBid, deleteBid, updateBidStatus,
+│   │                           #   rejectOtherBids, uploadBidDocument, deleteBidDocument,
+│   │                           #   getBidById
+│   ├── comments.ts             # (Phase 6)
+│   ├── messages.ts             # (Phase 6)
+│   ├── notifications.ts        # (Phase 7)
+│   └── collaborators.ts        # (Phase 7)
+├── types/                      # Shared TypeScript types (not DB types)
 │   └── index.ts
 ├── supabase/
-│   └── migrations/             # SQL migration files
+│   └── migrations/             # SQL migration files (numbered, never modify existing)
+│       ├── 0001_init.sql
+│       ├── 0002_projects.sql
+│       ├── 0003_fix_rls_recursion.sql
+│       ├── 0004_fix_collaborators_fk.sql
+│       └── 0005_bids.sql
 └── AGENTS.md
 ```
 
@@ -214,7 +242,7 @@ Before creating a new contractor record, always check for an existing contractor
 
 - Strict mode is enabled — no use of `any`
 - All Server Action inputs must be validated with **Zod** before hitting the database
-- Database types are auto-generated via Supabase CLI and live in `lib/supabase/types.ts` — do not hand-edit this file
+- Database types live in `lib/supabase/types.ts`. Ideally regenerated via `npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/supabase/types.ts` after every schema change. Until the Supabase CLI is connected to the project, manually add new table shapes to this file to match the migration — keep Row / Insert / Update / Relationships in sync with the SQL
 - Shared app-level types (not DB types) live in `types/index.ts`
 
 ---
@@ -224,11 +252,16 @@ Before creating a new contractor record, always check for an existing contractor
 | Variable | Used In |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Client + Server |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client |
-| `SUPABASE_SERVICE_ROLE_KEY` | Server only (API routes) |
-| `ANTHROPIC_API_KEY` | Server only |
-| `GOOGLE_PLACES_API_KEY` | Server only |
-| `FIRECRAWL_API_KEY` | Server only |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Client + Server |
+| `SUPABASE_SERVICE_ROLE_KEY` | `lib/supabase/admin.ts` — service-role client, bypasses RLS |
+| `NEXT_PUBLIC_SITE_URL` | Server Actions (building absolute URLs for API calls, e.g. enrich-contractor) |
+| `ANTHROPIC_API_KEY` | `lib/claude.ts` (Phase 5) |
+| `GOOGLE_PLACES_API_KEY` | `lib/google-places.ts` (Phase 4) |
+| `FIRECRAWL_API_KEY` | `lib/firecrawl.ts` (Phase 4) |
+| `RESEND_API_KEY` | `lib/resend.ts` (Phase 7) |
+| `FROM_EMAIL` | `lib/resend.ts` (Phase 7) |
+| `INVITE_JWT_SECRET` | `actions/collaborators.ts` (Phase 7) |
+| `INTERNAL_API_SECRET` | API route auth for internal calls (Phase 7) |
 
 **Never expose server-only keys to the client.** Any variable without `NEXT_PUBLIC_` prefix must only be used in server components, server actions, or API routes.
 
@@ -247,6 +280,18 @@ type ActionResult<T> =
 
 ---
 
+## Admin Client
+
+`lib/supabase/admin.ts` exports `createAdminClient()` — a service-role client that bypasses RLS. Use it only server-side when the anon client cannot perform the operation (e.g. inserting contractors, deleting storage objects). Never import it in client components or expose the service-role key to the browser.
+
+---
+
+## Supabase Storage
+
+One bucket: **`bid-documents`** (private). Storage path convention: `{project_id}/{bid_id}/{timestamp}.{ext}`. All upload/delete operations go through server actions using the admin client. The bucket must exist in the Supabase dashboard before document upload/delete will work.
+
+---
+
 ## What NOT to Do
 
 - Do not use `getServerSideProps` or `getStaticProps` — this is App Router only
@@ -262,7 +307,8 @@ type ActionResult<T> =
 ## Getting Started (for Agents)
 
 1. Read this file completely
-2. Check `/supabase/migrations/` to understand the current DB schema
-3. Check `/types/index.ts` for shared types
+2. Check `/supabase/migrations/` to understand the current DB schema (migrations 0001–0005 are applied)
+3. Check `/types/index.ts` for shared app-level types
 4. Check `/actions/` to understand existing mutation patterns before adding new ones
-5. Run `supabase gen types typescript` after any schema changes to regenerate `lib/supabase/types.ts`
+5. After any schema change: run `npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/supabase/types.ts`, or manually update `lib/supabase/types.ts` to match the new tables
+6. **Current phase: Phase 3 complete.** Phase 4 (contractor enrichment) is next.
