@@ -87,6 +87,13 @@ export async function createBid(
   const isMember = await assertProjectMember(supabase, projectId, user.id);
   if (!isMember) return { success: false, error: "Not authorized." };
 
+  // Fetch project location for contractor enrichment
+  const { data: project } = await supabase
+    .from("projects")
+    .select("location")
+    .eq("id", projectId)
+    .single();
+
   let lineItemsRaw: unknown = [];
   try {
     const raw = formData.get("line_items");
@@ -184,13 +191,20 @@ export async function createBid(
     if (liError) console.error("[createBid] line_items insert", liError);
   }
 
-  // Fire enrichment (stub — Phase 4 implements the actual logic)
+  // Fire enrichment — best-effort, non-blocking
+  // Consider just defined as function in this file rather than self-referencing API route
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     fetch(`${baseUrl}/api/enrich-contractor`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ contractorId, bidId: bid.id }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+      },
+      body: JSON.stringify({
+        contractorId,
+        projectLocation: project?.location ?? "",
+      }),
     }).catch(() => {});
   } catch {
     // non-blocking
