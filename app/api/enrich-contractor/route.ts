@@ -8,7 +8,7 @@ import type { Contractor } from "@/types";
 
 const BodySchema = z.object({
   contractorId: z.string().uuid(),
-  projectLocation: z.string().min(1),
+  projectLocation: z.string(),
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
