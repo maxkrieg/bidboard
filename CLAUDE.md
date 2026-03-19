@@ -69,9 +69,11 @@ npx supabase db push
 
 Work through these phases in sequence. Complete and verify each phase before starting the next. Do not skip ahead.
 
+**After completing each phase:** update this file — mark the phase complete, record any files that drifted from the plan (different names, extra files, removed steps), and note any conventions discovered that future phases should follow.
+
 ---
 
-### Phase 1 — Project Scaffold & Auth
+### Phase 1 — Project Scaffold & Auth ✅ COMPLETE
 **Goal:** A working Next.js app with Supabase auth and a protected dashboard route.
 
 Steps:
@@ -94,7 +96,7 @@ Steps:
 
 ---
 
-### Phase 2 — Projects
+### Phase 2 — Projects ✅ COMPLETE
 **Goal:** Users can create projects and see them on the dashboard.
 
 Steps:
@@ -108,14 +110,17 @@ Steps:
 
 **Verify:** User can create a project, see it on the dashboard, and navigate to the project view.
 
+**Drift notes:**
+- Two extra fix migrations were needed after this phase: `0003_fix_rls_recursion.sql` and `0004_fix_collaborators_fk.sql`. This shifted all subsequent migration numbers up by 2.
+
 ---
 
-### Phase 3 — Bids
+### Phase 3 — Bids ✅ COMPLETE
 **Goal:** Users can add, view, and manage bids on a project.
 
 Steps:
-1. Create `supabase/migrations/0003_bids.sql` — contractors, bids, bid_line_items, bid_documents tables + RLS
-2. Create `actions/bids.ts` — `createBid`, `updateBid`, `deleteBid`, `updateBidStatus`
+1. Create `supabase/migrations/0005_bids.sql` — contractors, bids, bid_line_items, bid_documents tables + RLS *(was 0003 in original plan — shifted by fix migrations)*
+2. Create `actions/bids.ts` — `createBid`, `updateBid`, `deleteBid`, `updateBidStatus`, `uploadBidDocument`, `deleteBidDocument`, `getBidById`
 3. Create `/projects/[id]/bids/new` page — bid creation form
 4. Create `/projects/[id]/bids/[bidId]` page — bid detail (comments column empty for now)
 5. Create `/projects/[id]/bids/[bidId]/edit` page
@@ -125,13 +130,21 @@ Steps:
 9. Create `components/bids/LineItemsTable.tsx`
 10. Create `components/bids/BidStatusActions.tsx`
 11. Create `components/bids/ComparisonTable.tsx`
-12. Wire "Add Bid" button into the Bids tab on the project view
+12. Create `components/bids/BidDocuments.tsx` *(not in original plan)*
+13. Create `components/bids/DeleteBidButton.tsx` *(not in original plan)*
+14. Create `components/shared/StatusBadge.tsx` *(not in original plan)*
+15. Wire "Add Bid" button into the Bids tab on the project view
 
 **Verify:** User can add a bid with line items, see it as a card on the project, view its detail, edit it, change its status, and view the comparison table.
 
+**Drift notes:**
+- `actions/bids.ts` grew to include `uploadBidDocument`, `deleteBidDocument`, and `getBidById` beyond the original plan.
+- Extra shared/bid components were added: `BidDocuments`, `DeleteBidButton`, `StatusBadge`.
+- `is_project_member(p_project_id uuid)` SQL helper function was defined in `0005_bids.sql` and is reused in all subsequent RLS policies — always use it for project-scoped access checks.
+
 ---
 
-### Phase 4 — Contractor Enrichment
+### Phase 4 — Contractor Enrichment ✅ COMPLETE
 **Goal:** When a bid is saved, the contractor is automatically researched and the data is displayed.
 
 Steps:
@@ -145,13 +158,17 @@ Steps:
 
 **Verify:** After adding a bid, the contractor card shows a loading state then populates with Google rating, review count, address, and website within a few seconds.
 
+**Drift notes:**
+- An additional migration `0006_contractors_realtime.sql` was created to add the contractors table to the Realtime publication (it was not included in `0005_bids.sql`).
+- The browser Supabase client is exported as `createClient()` from `lib/supabase/client.ts` — not `createBrowserClient()`. Use this name in all client components.
+
 ---
 
-### Phase 5 — AI Analysis
+### Phase 5 — AI Analysis ✅ COMPLETE
 **Goal:** Users can trigger AI analysis of all bids and see a structured comparison.
 
 Steps:
-1. Create `supabase/migrations/0005_bid_analyses.sql`
+1. Create `supabase/migrations/0007_bid_analyses.sql` *(was 0005 in original plan — shifted by fix migrations)*
 2. Create `lib/claude.ts` — Anthropic client, `ANALYZE_BIDS_PROMPT` constant, `analyzeBids()` function
 3. Create `app/api/analyze-bids/route.ts`
 4. Create `components/bids/AnalysisPanel.tsx`
@@ -162,11 +179,11 @@ Steps:
 
 ---
 
-### Phase 6 — Collaboration
+### Phase 6 — Collaboration ✅ COMPLETE
 **Goal:** Project members can comment on bids and message each other in real time.
 
 Steps:
-1. Create `supabase/migrations/0006_collaboration.sql` — comments + messages tables + RLS
+1. Create `supabase/migrations/0008_collaboration.sql` — comments + messages tables + RLS + Realtime *(was 0006 in original plan — shifted by fix migrations)*
 2. Create `actions/comments.ts` — `createComment`, `updateComment`, `deleteComment`
 3. Create `actions/messages.ts` — `createMessage`
 4. Create `components/comments/CommentsPanel.tsx` with Supabase Realtime
@@ -180,13 +197,18 @@ Steps:
 
 **Verify:** Two browser sessions logged in as different users can post comments and messages and see each other's activity in real time without refreshing.
 
+**Drift notes:**
+- `deleteComment` uses a soft-delete (sets `body=null`, `deleted=true`) when the comment has replies; hard-deletes otherwise.
+- Comments support one level of threading via `parent_id`. Replies are rendered indented beneath their parent in `CommentsPanel`.
+- `CommentsPanel` and `MessagesTab` maintain an author profile cache (`useRef`) to avoid redundant DB fetches for authors already seen in `initialComments`/`initialMessages`.
+
 ---
 
 ### Phase 7 — Invites & Notifications
 **Goal:** Project owners can invite collaborators and all members receive email notifications.
 
 Steps:
-1. Create `supabase/migrations/0007_notifications.sql`
+1. Create `supabase/migrations/0009_notifications.sql` *(next available number — was 0007 in original plan)*
 2. Create `lib/resend.ts` — Resend client + email template functions
 3. Create `app/api/notifications/route.ts`
 4. Create `actions/notifications.ts` — `markNotificationRead`, `markAllNotificationsRead`
@@ -222,4 +244,4 @@ Read all spec and AGENTS files, then say:
 - What files you will create
 - Any questions or blockers before you begin
 
-Then start Phase 1.
+**Current status: Phases 1–6 complete. Next up: Phase 7 — Invites & Notifications.**
