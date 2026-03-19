@@ -96,3 +96,24 @@ export interface ProjectWithMeta extends Project {
   bid_count: number;
   bids: BidWithMeta[];
 }
+
+export interface BidAnalysisBid {
+  bid_id: string;
+  contractor_name: string;
+  highlights: string[];
+  red_flags: string[];
+  questions: string[];
+}
+
+export interface BidAnalysis {
+  summary: string;
+  bids: BidAnalysisBid[];
+}
+
+export interface BidAnalysisRecord {
+  id: string;
+  project_id: string;
+  summary: string;
+  analysis: BidAnalysisBid[];
+  created_at: string;
+}

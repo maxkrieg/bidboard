@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      bid_analyses: {
+        Row: {
+          analysis: Json
+          created_at: string | null
+          id: string
+          project_id: string
+          summary: string
+        }
+        Insert: {
+          analysis: Json
+          created_at?: string | null
+          id?: string
+          project_id: string
+          summary: string
+        }
+        Update: {
+          analysis?: Json
+          created_at?: string | null
+          id?: string
+          project_id?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_analyses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bid_documents: {
         Row: {
           bid_id: string
@@ -306,10 +338,7 @@ export type Database = {
         Args: { p_project_id: string }
         Returns: boolean
       }
-      is_project_member: {
-        Args: { p_project_id: string }
-        Returns: boolean
-      }
+      is_project_member: { Args: { p_project_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

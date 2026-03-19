@@ -8,13 +8,14 @@ import {
 } from "@/components/ui/tabs";
 import { CollaboratorsTab } from "./CollaboratorsTab";
 import { BidsTab } from "./BidsTab";
-import type { ProjectWithMeta } from "@/types";
+import type { ProjectWithMeta, BidAnalysisRecord } from "@/types";
 
 interface ProjectTabsProps {
   project: ProjectWithMeta;
   isOwner: boolean;
   ownerEmail: string;
   ownerName: string | null;
+  initialAnalysis: BidAnalysisRecord | null;
 }
 
 export function ProjectTabs({
@@ -22,6 +23,7 @@ export function ProjectTabs({
   isOwner,
   ownerEmail,
   ownerName,
+  initialAnalysis,
 }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="bids">
@@ -49,7 +51,11 @@ export function ProjectTabs({
       </div>
 
       <TabsContent value="bids" className="">
-        <BidsTab projectId={project.id} bids={project.bids} />
+        <BidsTab
+          projectId={project.id}
+          bids={project.bids}
+          initialAnalysis={initialAnalysis}
+        />
       </TabsContent>
 
       <TabsContent value="messages" className="">

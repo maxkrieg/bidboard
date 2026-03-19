@@ -1,0 +1,136 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { analyzeBids } from "@/lib/claude";
+import type { BidPromptInput } from "@/lib/claude";
+import type { BidWithMeta } from "@/types";
+import type { Json } from "@/lib/supabase/types";
+
+const bodySchema = z.object({
+  project_id: z.string().uuid(),
+});
+
+export async function POST(request: Request) {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const parsed = bodySchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const { project_id } = parsed.data;
+
+  // Verify membership: owner or accepted collaborator
+  const { data: project } = await supabase
+    .from("projects")
+    .select("id, name, description, location, owner_id")
+    .eq("id", project_id)
+    .single();
+
+  if (!project) {
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
+  }
+
+  const isMember =
+    project.owner_id === user.id ||
+    (await (async () => {
+      const { data } = await supabase
+        .from("project_collaborators")
+        .select("id")
+        .eq("project_id", project_id)
+        .eq("user_id", user.id)
+        .eq("status", "accepted")
+        .maybeSingle();
+      return !!data;
+    })());
+
+  if (!isMember) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // Fetch bids with contractor + line items
+  const { data: bids, error: bidsError } = await supabase
+    .from("bids")
+    .select("*, contractor:contractors(*), line_items:bid_line_items(*)")
+    .eq("project_id", project_id);
+
+  if (bidsError) {
+    return NextResponse.json({ error: "Failed to fetch bids" }, { status: 500 });
+  }
+
+  if (!bids || bids.length < 2) {
+    return NextResponse.json(
+      { error: "At least 2 bids are required to run analysis" },
+      { status: 400 }
+    );
+  }
+
+  const promptInputs: BidPromptInput[] = (bids as BidWithMeta[]).map((bid) => ({
+    bid_id: bid.id,
+    contractor_name: bid.contractor.name,
+    total_price: bid.total_price,
+    estimated_days: bid.estimated_days,
+    expiry_date: bid.expiry_date,
+    notes: bid.notes,
+    line_items: bid.line_items.map((li) => ({
+      description: li.description,
+      quantity: li.quantity,
+      unit: li.unit,
+      unit_price: li.unit_price,
+      total_price: li.quantity * li.unit_price,
+    })),
+  }));
+
+  const projectDescription = [project.name, project.description, project.location]
+    .filter(Boolean)
+    .join(" — ");
+
+  let analysis: Awaited<ReturnType<typeof analyzeBids>>;
+  try {
+    analysis = await analyzeBids(promptInputs, projectDescription);
+  } catch {
+    return NextResponse.json(
+      { error: "AI analysis failed. Please try again." },
+      { status: 500 }
+    );
+  }
+
+  // Upsert via admin client to bypass RLS complexity
+  const admin = createAdminClient();
+  const { data: record, error: upsertError } = await admin
+    .from("bid_analyses")
+    .upsert(
+      {
+        project_id,
+        summary: analysis.summary,
+        analysis: analysis.bids as unknown as Json,
+      },
+      { onConflict: "project_id" }
+    )
+    .select()
+    .single();
+
+  if (upsertError) {
+    return NextResponse.json(
+      { error: "Failed to save analysis" },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json(record);
+}

@@ -2,14 +2,16 @@ import Link from "next/link";
 import { FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BidCard } from "@/components/bids/BidCard";
-import type { BidWithMeta } from "@/types";
+import { AnalysisPanel } from "@/components/bids/AnalysisPanel";
+import type { BidWithMeta, BidAnalysisRecord } from "@/types";
 
 interface BidsTabProps {
   projectId: string;
   bids: BidWithMeta[];
+  initialAnalysis: BidAnalysisRecord | null;
 }
 
-export function BidsTab({ projectId, bids }: BidsTabProps) {
+export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -57,7 +59,11 @@ export function BidsTab({ projectId, bids }: BidsTabProps) {
         </div>
       )}
 
-      {/* AI Analysis panel placeholder — Phase 5 */}
+      <AnalysisPanel
+        projectId={projectId}
+        bids={bids}
+        initialAnalysis={initialAnalysis}
+      />
     </div>
   );
 }
