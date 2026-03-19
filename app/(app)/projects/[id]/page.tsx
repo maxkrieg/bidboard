@@ -3,7 +3,7 @@ import { getProjectById } from "@/actions/projects";
 import { createServerClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/projects/ProjectTabs";
 import { ArchiveDropdown } from "@/components/projects/ArchiveDropdown";
-import type { BidAnalysisRecord } from "@/types";
+import type { BidAnalysisRecord, MessageWithAuthor } from "@/types";
 
 export default async function ProjectPage({
   params,
@@ -35,6 +35,13 @@ export default async function ProjectPage({
     .eq("project_id", id)
     .maybeSingle();
 
+  // Fetch initial messages for the Messages tab
+  const { data: initialMessages } = await supabase
+    .from("messages")
+    .select("*, author:users(full_name, avatar_url, email)")
+    .eq("project_id", id)
+    .order("created_at", { ascending: true });
+
   return (
     <div>
       <div className="flex items-start justify-between mb-6">
@@ -53,6 +60,8 @@ export default async function ProjectPage({
         ownerEmail={ownerProfile?.email ?? user?.email ?? ""}
         ownerName={ownerProfile?.full_name ?? null}
         initialAnalysis={(analysis as BidAnalysisRecord | null) ?? null}
+        initialMessages={(initialMessages ?? []) as MessageWithAuthor[]}
+        currentUserId={user?.id ?? ""}
       />
     </div>
   );

@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/tabs";
 import { CollaboratorsTab } from "./CollaboratorsTab";
 import { BidsTab } from "./BidsTab";
-import type { ProjectWithMeta, BidAnalysisRecord } from "@/types";
+import { MessagesTab } from "@/components/messages/MessagesTab";
+import type { ProjectWithMeta, BidAnalysisRecord, MessageWithAuthor } from "@/types";
 
 interface ProjectTabsProps {
   project: ProjectWithMeta;
@@ -16,6 +17,8 @@ interface ProjectTabsProps {
   ownerEmail: string;
   ownerName: string | null;
   initialAnalysis: BidAnalysisRecord | null;
+  initialMessages: MessageWithAuthor[];
+  currentUserId: string;
 }
 
 export function ProjectTabs({
@@ -24,6 +27,8 @@ export function ProjectTabs({
   ownerEmail,
   ownerName,
   initialAnalysis,
+  initialMessages,
+  currentUserId,
 }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="bids">
@@ -59,9 +64,11 @@ export function ProjectTabs({
       </TabsContent>
 
       <TabsContent value="messages" className="">
-        <p className="text-zinc-500 text-sm">
-          Messages will appear here. (Coming in Phase 6)
-        </p>
+        <MessagesTab
+          projectId={project.id}
+          initialMessages={initialMessages}
+          currentUserId={currentUserId}
+        />
       </TabsContent>
 
       <TabsContent value="collaborators" className="">

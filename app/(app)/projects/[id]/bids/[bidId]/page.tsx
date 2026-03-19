@@ -2,13 +2,16 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Pencil } from "lucide-react";
 import { getBidById } from "@/actions/bids";
+import { createServerClient } from "@/lib/supabase/server";
 import { ContractorCard } from "@/components/bids/ContractorCard";
 import { LineItemsTable } from "@/components/bids/LineItemsTable";
 import { BidDocuments } from "@/components/bids/BidDocuments";
 import { BidStatusActions } from "@/components/bids/BidStatusActions";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DeleteBidButton } from "@/components/bids/DeleteBidButton";
+import { CommentsPanel } from "@/components/comments/CommentsPanel";
 import { Button } from "@/components/ui/button";
+import type { CommentWithAuthor } from "@/types";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -27,6 +30,17 @@ export default async function BidDetailPage({
   if (!result.success) notFound();
 
   const bid = result.data;
+
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { data: initialComments } = await supabase
+    .from("comments")
+    .select("*, author:users(full_name, avatar_url, email)")
+    .eq("bid_id", bidId)
+    .order("created_at", { ascending: true });
 
   return (
     <div>
@@ -153,25 +167,13 @@ export default async function BidDetailPage({
           </div>
         </div>
 
-        {/* Right column — comments skeleton (Phase 6) */}
+        {/* Right column — comments */}
         <div className="mt-6 lg:mt-0">
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="text-base font-semibold text-zinc-900 mb-4">
-              Comments
-            </h3>
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex gap-3 animate-pulse">
-                  <div className="w-7 h-7 rounded-full bg-zinc-100 shrink-0" />
-                  <div className="flex-1 space-y-2 pt-0.5">
-                    <div className="h-2.5 w-20 rounded bg-zinc-100" />
-                    <div className="h-2.5 w-full rounded bg-zinc-100" />
-                    <div className="h-2.5 w-4/5 rounded bg-zinc-100" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CommentsPanel
+            bidId={bidId}
+            initialComments={(initialComments ?? []) as CommentWithAuthor[]}
+            currentUserId={user?.id ?? ""}
+          />
         </div>
       </div>
     </div>
