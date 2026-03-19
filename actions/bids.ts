@@ -195,7 +195,7 @@ export async function createBid(
   // Consider just defined as function in this file rather than self-referencing API route
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    fetch(`${baseUrl}/api/enrich-contractor`, {
+    await fetch(`${baseUrl}/api/enrich-contractor`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -206,8 +206,9 @@ export async function createBid(
         projectLocation: project?.location ?? "",
       }),
     }).catch(() => {});
-  } catch {
+  } catch (e) {
     // non-blocking
+    console.error("[createBid] enrichment fetch failed", e);
   }
 
   return { success: true, data: { id: bid.id } };
@@ -231,6 +232,13 @@ export async function updateBid(
 
   const isMember = await assertProjectMember(supabase, projectId, user.id);
   if (!isMember) return { success: false, error: "Not authorized." };
+
+  // Fetch project location for contractor enrichment
+  const { data: project } = await supabase
+    .from("projects")
+    .select("location")
+    .eq("id", projectId)
+    .single();
 
   let lineItemsRaw: unknown = [];
   try {
@@ -324,6 +332,25 @@ export async function updateBid(
         unit_price: item.unit_price,
       }))
     );
+  }
+
+  // Fire enrichment — best-effort, non-blocking
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    await fetch(`${baseUrl}/api/enrich-contractor`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+      },
+      body: JSON.stringify({
+        contractorId,
+        projectLocation: project?.location ?? "",
+      }),
+    }).catch(() => {});
+  } catch (e) {
+    // non-blocking
+    console.error("[updateBid] enrichment fetch failed", e);
   }
 
   return { success: true, data: { id: bidId } };
