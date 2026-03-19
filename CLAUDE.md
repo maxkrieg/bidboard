@@ -30,20 +30,19 @@ Do not write any code until you have read all of the above.
 
 ## Environment Variables
 
-Before starting, create a `.env.local` file in the project root with the following keys. Do not hardcode any of these values in source files.
+Copy `.env.local.example` to `.env.local` and fill in all values. Do not hardcode any of these values in source files.
 
+```bash
+cp .env.local.example .env.local
 ```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-ANTHROPIC_API_KEY=
-GOOGLE_PLACES_API_KEY=
-FIRECRAWL_API_KEY=
-RESEND_API_KEY=
-FROM_EMAIL=
-INVITE_JWT_SECRET=
-INTERNAL_API_SECRET=
-```
+
+**When adding a new environment variable**, you must also add it to `.env.local.example` (with an empty value and a short comment explaining what it is). This keeps the example file authoritative as the canonical list of required variables.
+
+### `NEXT_PUBLIC_SITE_URL` on Vercel
+
+When deploying to Vercel, set `NEXT_PUBLIC_SITE_URL` to your production URL (e.g. `https://bidboard.vercel.app`) in the Vercel dashboard under Project → Settings → Environment Variables.
+
+Vercel provides `NEXT_PUBLIC_VERCEL_URL` automatically, but it is hostname-only (no `https://` prefix) and should not be used as a substitute here — all email links and internal API fetch calls depend on `NEXT_PUBLIC_SITE_URL` being a fully-qualified URL.
 
 ---
 
@@ -204,7 +203,7 @@ Steps:
 
 ---
 
-### Phase 7 — Invites & Notifications
+### Phase 7 — Invites & Notifications ✅ COMPLETE
 **Goal:** Project owners can invite collaborators and all members receive email notifications.
 
 Steps:
@@ -219,6 +218,13 @@ Steps:
 9. Wire notification triggers into bid, comment, and message actions
 
 **Verify:** Owner can invite a collaborator by email. Invitee receives an email, clicks the link, signs in, and lands on the shared project. Notification bell shows unread count when activity occurs.
+
+**Drift notes:**
+- `jose` was installed for edge-safe JWT signing/verification.
+- Login page was split into `page.tsx` (Server Component) + `LoginForm.tsx` (Client Component) to satisfy the Next.js Suspense requirement for `useSearchParams`.
+- `app/auth/callback/route.ts` was updated to respect `?next=` query param (checked before cookie-based invite redirect).
+- `NEXT_PUBLIC_SITE_URL` (already present from Phase 1) is used for all absolute URL construction in emails and notification fetch calls.
+- `DropdownMenuTrigger` in this codebase does not support `asChild`; `NotificationBell` renders the trigger as a plain styled button instead.
 
 ---
 
@@ -244,4 +250,4 @@ Read all spec and AGENTS files, then say:
 - What files you will create
 - Any questions or blockers before you begin
 
-**Current status: Phases 1–6 complete. Next up: Phase 7 — Invites & Notifications.**
+**Current status: Phases 1–7 complete. All phases done.**

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { inviteCollaborator } from "@/actions/collaborators";
 import type { CollaboratorWithUser } from "@/types";
 
 interface CollaboratorsTabProps {
@@ -29,13 +30,34 @@ function getInitials(name: string | null, email: string): string {
 }
 
 export function CollaboratorsTab({
+  projectId,
   isOwner,
   ownerEmail,
   ownerName,
   collaborators,
 }: CollaboratorsTabProps) {
   const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteSuccess, setInviteSuccess] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const atLimit = collaborators.length >= 3;
+
+  function handleInvite(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setInviteError(null);
+    setInviteSuccess(false);
+
+    startTransition(async () => {
+      const result = await inviteCollaborator(projectId, inviteEmail);
+      if (!result.success) {
+        setInviteError(result.error);
+        return;
+      }
+      setInviteEmail("");
+      setInviteSuccess(true);
+      setTimeout(() => setInviteSuccess(false), 3000);
+    });
+  }
 
   return (
     <div className="space-y-6 max-w-lg">
@@ -113,26 +135,38 @@ export function CollaboratorsTab({
                 Maximum of 3 collaborators reached.
               </p>
             ) : (
-              <div className="flex gap-2">
-                <Input
-                  type="email"
-                  placeholder="colleague@example.com"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  className="flex-1"
-                />
-                <Button
-                  disabled
-                  className="bg-indigo-600 hover:bg-indigo-700 shrink-0"
-                  title="Invites are enabled in a later phase"
-                >
-                  Send Invite
-                </Button>
-              </div>
+              <form onSubmit={handleInvite}>
+                <div className="flex gap-2">
+                  <Input
+                    type="email"
+                    placeholder="colleague@example.com"
+                    value={inviteEmail}
+                    onChange={(e) => {
+                      setInviteEmail(e.target.value);
+                      setInviteError(null);
+                    }}
+                    className="flex-1"
+                    required
+                    disabled={isPending}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isPending || !inviteEmail}
+                    className="bg-indigo-600 hover:bg-indigo-700 shrink-0"
+                  >
+                    {isPending ? "Sending…" : "Send Invite"}
+                  </Button>
+                </div>
+                {inviteError && (
+                  <p className="text-xs text-red-500 mt-2">{inviteError}</p>
+                )}
+                {inviteSuccess && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Invite sent successfully!
+                  </p>
+                )}
+              </form>
             )}
-            <p className="text-xs text-zinc-400 mt-2">
-              Invite sending will be available soon.
-            </p>
           </div>
         </>
       )}

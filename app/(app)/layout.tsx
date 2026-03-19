@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
+import { NotificationBell } from "@/components/shared/NotificationBell";
+import type { Notification } from "@/types";
 
 export default async function AppLayout({
   children,
@@ -14,6 +16,16 @@ export default async function AppLayout({
   if (!user) redirect("/login");
 
   const initial = user.email?.[0]?.toUpperCase() ?? "U";
+
+  const { data: notifications } = await supabase
+    .from("notifications")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const typedNotifications = (notifications ?? []) as Notification[];
+  const unreadCount = typedNotifications.filter((n) => !n.read).length;
 
   return (
     <div className="min-h-screen bg-zinc-50">
@@ -32,6 +44,10 @@ export default async function AppLayout({
           </Link>
 
           <div className="flex items-center gap-3">
+            <NotificationBell
+              initialUnreadCount={unreadCount}
+              initialNotifications={typedNotifications}
+            />
             <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
               <span className="text-sm font-semibold text-indigo-700">
                 {initial}

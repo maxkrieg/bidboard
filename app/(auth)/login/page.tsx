@@ -1,40 +1,7 @@
-"use client";
-
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Suspense } from "react";
+import LoginForm from "./LoginForm";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const supabase = createClient();
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-
-    if (otpError) {
-      setError(otpError.message);
-      setLoading(false);
-      return;
-    }
-
-    setSubmitted(true);
-    setLoading(false);
-  }
-
   return (
     <main className="min-h-screen flex">
       {/* Left panel — brand */}
@@ -85,51 +52,9 @@ export default function LoginPage() {
             <span className="font-bold text-zinc-900 text-lg">BidBoard</span>
           </div>
 
-          {submitted ? (
-            <div>
-              <h1 className="text-2xl font-bold text-zinc-900 mb-2">
-                Check your email
-              </h1>
-              <p className="text-sm text-zinc-500">
-                We sent a magic link to{" "}
-                <span className="font-medium text-zinc-900">{email}</span>.
-                Click it to sign in.
-              </p>
-            </div>
-          ) : (
-            <>
-              <h1 className="text-2xl font-bold text-zinc-900 mb-1">
-                Sign in
-              </h1>
-              <p className="text-sm text-zinc-500 mb-8">
-                We&apos;ll send you a magic link.
-              </p>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoFocus
-                    className="h-10"
-                  />
-                </div>
-                {error && <p className="text-sm text-red-500">{error}</p>}
-                <Button
-                  type="submit"
-                  className="w-full h-10"
-                  disabled={loading}
-                >
-                  {loading ? "Sending…" : "Send Magic Link"}
-                </Button>
-              </form>
-            </>
-          )}
+          <Suspense fallback={null}>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </main>

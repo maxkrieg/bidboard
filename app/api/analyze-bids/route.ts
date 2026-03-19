@@ -132,5 +132,24 @@ export async function POST(request: Request) {
     );
   }
 
+  // Fire analysis_ready notification — best-effort, non-blocking
+  try {
+    const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    await fetch(`${appUrl}/api/notifications`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+      },
+      body: JSON.stringify({
+        type: "analysis_ready",
+        project_id,
+        triggered_by: user.id,
+      }),
+    }).catch(() => {});
+  } catch (e) {
+    console.error("[analyze-bids] notification fetch failed", e);
+  }
+
   return NextResponse.json(record);
 }

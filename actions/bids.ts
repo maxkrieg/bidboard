@@ -211,6 +211,35 @@ export async function createBid(
     console.error("[createBid] enrichment fetch failed", e);
   }
 
+  // Fire bid_added notification — best-effort, non-blocking
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+    const { data: contractor } = await supabase
+      .from("contractors")
+      .select("name")
+      .eq("id", contractorId)
+      .single();
+    await fetch(`${baseUrl}/api/notifications`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+      },
+      body: JSON.stringify({
+        type: "bid_added",
+        project_id: projectId,
+        triggered_by: user.id,
+        reference_id: bid.id,
+        metadata: {
+          contractor_name: contractor?.name ?? "Unknown",
+          amount: String(parsed.data.total_price),
+        },
+      }),
+    }).catch(() => {});
+  } catch (e) {
+    console.error("[createBid] notification fetch failed", e);
+  }
+
   return { success: true, data: { id: bid.id } };
 }
 

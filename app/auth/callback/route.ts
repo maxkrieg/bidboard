@@ -36,6 +36,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", origin));
   }
 
+  // Respect `next` query param for post-login redirect
+  const next = searchParams.get("next");
+  if (next && next.startsWith("/")) {
+    return NextResponse.redirect(new URL(next, origin));
+  }
+
   // Check for a pending invite token stored before login
   const inviteToken = cookieStore.get("invite_token")?.value;
   if (inviteToken) {

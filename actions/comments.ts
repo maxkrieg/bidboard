@@ -81,6 +81,36 @@ export async function createComment(
     return { success: false, error: error?.message ?? "Failed to create comment" };
   }
 
+  // Fire comment_added notification — best-effort, non-blocking
+  try {
+    const { data: bid } = await supabase
+      .from("bids")
+      .select("project_id")
+      .eq("id", bidId)
+      .single();
+    if (bid) {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      await fetch(`${baseUrl}/api/notifications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+        },
+        body: JSON.stringify({
+          type: "comment_added",
+          project_id: bid.project_id,
+          triggered_by: user.id,
+          reference_id: bidId,
+          metadata: {
+            comment_excerpt: parsed.data.body.slice(0, 100),
+          },
+        }),
+      }).catch(() => {});
+    }
+  } catch (e) {
+    console.error("[createComment] notification fetch failed", e);
+  }
+
   return { success: true, data: data as Comment };
 }
 

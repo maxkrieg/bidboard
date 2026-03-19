@@ -144,3 +144,20 @@ export interface Message {
 export interface MessageWithAuthor extends Message {
   author: { full_name: string | null; avatar_url: string | null; email: string };
 }
+
+export type NotificationType =
+  | "invite"
+  | "bid_added"
+  | "comment_added"
+  | "message_added"
+  | "analysis_ready";
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  project_id: string | null;
+  type: NotificationType;
+  reference_id: string | null;
+  read: boolean;
+  created_at: string;
+}
