@@ -3,6 +3,8 @@ import { getProjectById } from "@/actions/projects";
 import { createServerClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/projects/ProjectTabs";
 import { ArchiveDropdown } from "@/components/projects/ArchiveDropdown";
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import type { BidAnalysisRecord, MessageWithAuthor } from "@/types";
 
 export default async function ProjectPage({
@@ -44,6 +46,13 @@ export default async function ProjectPage({
 
   return (
     <div>
+      <Link
+        href="/dashboard"
+        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"
+      >
+        <ChevronLeft size={14} />
+        Dashboard
+      </Link>
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900">
