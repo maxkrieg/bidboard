@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Globe, Phone, Mail, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { getLicenseUrl } from "@/lib/license-states";
 import type { Contractor } from "@/types";
 
 interface ContractorCardProps {
@@ -65,6 +66,12 @@ export function ContractorCard({ contractor: initial }: ContractorCardProps) {
   const enriched = !!contractor.enriched_at;
   const displayAddress = contractor.address ?? contractor.location;
 
+  const googleUrl = contractor.google_place_id
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contractor.name)}&query_place_id=${contractor.google_place_id}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contractor.name)}`;
+  const bbbUrl = `https://www.bbb.org/search?find_text=${encodeURIComponent(contractor.name)}&find_loc=${encodeURIComponent(contractor.location ?? "")}`;
+  const licenseUrl = getLicenseUrl(contractor.location ?? "", contractor.name);
+
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-4">
       <h3 className="text-base font-semibold text-zinc-900 mb-3">
@@ -120,14 +127,19 @@ export function ContractorCard({ contractor: initial }: ContractorCardProps) {
           {!enriched ? (
             <SkeletonPulse />
           ) : contractor.google_rating !== null ? (
-            <div>
+            <a
+              href={googleUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center hover:opacity-70 transition-opacity"
+            >
               <p className="text-sm font-medium text-zinc-800">
                 ★ {contractor.google_rating}
               </p>
               <p className="text-xs text-zinc-400">
                 ({contractor.google_review_count ?? 0} reviews)
               </p>
-            </div>
+            </a>
           ) : (
             <p className="text-xs text-zinc-400">Not found</p>
           )}
@@ -139,7 +151,12 @@ export function ContractorCard({ contractor: initial }: ContractorCardProps) {
           {!enriched ? (
             <SkeletonPulse />
           ) : contractor.bbb_rating ? (
-            <div className="flex flex-col items-center gap-1">
+            <a
+              href={bbbUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex flex-col items-center gap-1 hover:opacity-70 transition-opacity"
+            >
               <span
                 className={`inline-block rounded px-1.5 py-0.5 text-xs font-semibold ${bbbBadgeClass(contractor.bbb_rating)}`}
               >
@@ -148,7 +165,7 @@ export function ContractorCard({ contractor: initial }: ContractorCardProps) {
               {contractor.bbb_accredited && (
                 <p className="text-xs text-green-600">Accredited</p>
               )}
-            </div>
+            </a>
           ) : (
             <p className="text-xs text-zinc-400">Not listed</p>
           )}
@@ -160,18 +177,45 @@ export function ContractorCard({ contractor: initial }: ContractorCardProps) {
           {!enriched ? (
             <SkeletonPulse />
           ) : contractor.license_status === "active" ? (
-            <div className="flex flex-col items-center gap-0.5">
-              <p className="text-xs font-medium text-green-600">✓ Active</p>
-              {contractor.license_number && (
-                <p className="text-xs text-zinc-400">{contractor.license_number}</p>
-              )}
-            </div>
+            licenseUrl ? (
+              <a
+                href={licenseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-0.5 hover:opacity-70 transition-opacity"
+              >
+                <p className="text-xs font-medium text-green-600">✓ Active</p>
+                {contractor.license_number && (
+                  <p className="text-xs text-zinc-400">{contractor.license_number}</p>
+                )}
+              </a>
+            ) : (
+              <div className="flex flex-col items-center gap-0.5">
+                <p className="text-xs font-medium text-green-600">✓ Active</p>
+                {contractor.license_number && (
+                  <p className="text-xs text-zinc-400">{contractor.license_number}</p>
+                )}
+              </div>
+            )
           ) : contractor.license_status ? (
-            <div className="flex flex-col items-center gap-0.5">
-              <p className="text-xs font-medium text-red-500">
-                ✗ {contractor.license_status}
-              </p>
-            </div>
+            licenseUrl ? (
+              <a
+                href={licenseUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-0.5 hover:opacity-70 transition-opacity"
+              >
+                <p className="text-xs font-medium text-red-500">
+                  ✗ {contractor.license_status}
+                </p>
+              </a>
+            ) : (
+              <div className="flex flex-col items-center gap-0.5">
+                <p className="text-xs font-medium text-red-500">
+                  ✗ {contractor.license_status}
+                </p>
+              </div>
+            )
           ) : (
             <p className="text-xs text-zinc-400">Not verified</p>
           )}
