@@ -16,9 +16,10 @@ import type { Bid, BidStatus } from "@/types";
 interface BidStatusActionsProps {
   bid: Bid;
   projectId: string;
+  isOwner: boolean;
 }
 
-export function BidStatusActions({ bid, projectId }: BidStatusActionsProps) {
+export function BidStatusActions({ bid, projectId, isOwner }: BidStatusActionsProps) {
   const [currentStatus, setCurrentStatus] = useState<BidStatus>(bid.status);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [otherBidIds, setOtherBidIds] = useState<string[]>([]);
@@ -77,6 +78,14 @@ export function BidStatusActions({ bid, projectId }: BidStatusActionsProps) {
         "bg-white text-zinc-500 border-zinc-200 hover:bg-zinc-50",
     },
   };
+
+  if (!isOwner) {
+    return (
+      <p className="text-sm text-zinc-500">
+        Only the project owner can change bid status.
+      </p>
+    );
+  }
 
   return (
     <>

@@ -42,6 +42,13 @@ export default async function BidDetailPage({
     .eq("bid_id", bidId)
     .order("created_at", { ascending: true });
 
+  const { data: project } = await supabase
+    .from("projects")
+    .select("owner_id")
+    .eq("id", id)
+    .single();
+  const isOwner = project?.owner_id === user?.id;
+
   return (
     <div>
       <Link
@@ -133,7 +140,7 @@ export default async function BidDetailPage({
             <h3 className="text-base font-semibold text-zinc-900 mb-3">
               Status
             </h3>
-            <BidStatusActions bid={bid} projectId={id} />
+            <BidStatusActions bid={bid} projectId={id} isOwner={isOwner} />
           </div>
 
           {/* Line items */}

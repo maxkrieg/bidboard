@@ -475,8 +475,13 @@ export async function updateBidStatus(
   const projectId = await getBidProjectId(supabase, bidId);
   if (!projectId) return { success: false, error: "Bid not found." };
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) return { success: false, error: "Not authorized." };
+  const { data: project } = await supabase
+    .from("projects")
+    .select("owner_id")
+    .eq("id", projectId)
+    .single();
+  if (project?.owner_id !== user.id)
+    return { success: false, error: "Only the project owner can change bid status." };
 
   const { error } = await supabase
     .from("bids")
@@ -514,8 +519,13 @@ export async function rejectOtherBids(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) return { success: false, error: "Not authorized." };
+  const { data: project } = await supabase
+    .from("projects")
+    .select("owner_id")
+    .eq("id", projectId)
+    .single();
+  if (project?.owner_id !== user.id)
+    return { success: false, error: "Only the project owner can change bid status." };
 
   const { error } = await supabase
     .from("bids")

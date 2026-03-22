@@ -100,6 +100,7 @@ export interface ProjectWithMeta extends Project {
 export interface BidAnalysisBid {
   bid_id: string;
   contractor_name: string;
+  score: number;
   highlights: string[];
   red_flags: string[];
   questions: string[];

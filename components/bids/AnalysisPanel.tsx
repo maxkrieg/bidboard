@@ -149,13 +149,16 @@ export function AnalysisPanel({
         {/* Per-bid sections */}
         {analysis.analysis.length > 0 && (
           <div className="space-y-3 mb-6">
-            {analysis.analysis.map((bidAnalysis) => (
-              <AnalysisBidSection
-                key={bidAnalysis.bid_id}
-                bid={bidAnalysis}
-                totalPrice={bidPriceMap[bidAnalysis.bid_id] ?? 0}
-              />
-            ))}
+            {[...analysis.analysis]
+              .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+              .map((bidAnalysis, i) => (
+                <AnalysisBidSection
+                  key={bidAnalysis.bid_id}
+                  bid={bidAnalysis}
+                  totalPrice={bidPriceMap[bidAnalysis.bid_id] ?? 0}
+                  rank={i + 1}
+                />
+              ))}
           </div>
         )}
 

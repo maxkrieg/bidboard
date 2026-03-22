@@ -55,12 +55,21 @@ Please analyze these bids and respond ONLY with a valid JSON object matching thi
     {
       "bid_id": "<bid_id>",
       "contractor_name": "<name>",
+      "score": <1-5 integer>,
       "highlights": ["<positive aspect 1>", "<positive aspect 2>"],
       "red_flags": ["<concern 1>", "<concern 2>"],
       "questions": ["<question to ask contractor 1>", "<question 2>"]
     }
   ]
 }
+
+Scoring guidelines (score field, integer 1–5):
+- 5: Exceptional overall value — competitive price, complete scope, strong track record, minimal concerns
+- 4: Strong bid with minor gaps or slightly higher price offset by quality signals
+- 3: Acceptable bid with notable trade-offs that need discussion
+- 2: Below average — missing scope, overpriced, or multiple red flags
+- 1: Seriously deficient — major concerns, incomplete, or not recommended
+Return the bids array sorted from highest score to lowest.
 
 Guidelines:
 - Red flags should be specific and actionable (e.g. "No mention of permit costs" not "Missing items")
@@ -180,6 +189,8 @@ export async function analyzeBids(
     .join("");
 
   const clean = text.replace(/```json|```/g, "").trim();
+
+  console.log("[anthropic] analyzeBids response:", clean);
 
   try {
     return JSON.parse(clean) as BidAnalysis;
