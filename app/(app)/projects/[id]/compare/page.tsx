@@ -41,7 +41,7 @@ export default async function CompareBidsPage({
           </Link>
         </div>
       ) : (
-        <ComparisonTable bids={bids} />
+        <ComparisonTable bids={bids} targetBudget={project.target_budget} />
       )}
     </div>
   );

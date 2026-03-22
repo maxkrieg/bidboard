@@ -3,15 +3,17 @@ import { FileText, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BidCard } from "@/components/bids/BidCard";
 import { AnalysisPanel } from "@/components/bids/AnalysisPanel";
+import { BudgetChart } from "@/components/bids/BudgetChart";
 import type { BidWithMeta, BidAnalysisRecord } from "@/types";
 
 interface BidsTabProps {
   projectId: string;
   bids: BidWithMeta[];
   initialAnalysis: BidAnalysisRecord | null;
+  targetBudget: number | null;
 }
 
-export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
+export function BidsTab({ projectId, bids, initialAnalysis, targetBudget }: BidsTabProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -52,11 +54,14 @@ export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {bids.map((bid) => (
-            <BidCard key={bid.id} bid={bid} />
-          ))}
-        </div>
+        <>
+          <BudgetChart bids={bids} targetBudget={targetBudget} />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {bids.map((bid) => (
+              <BidCard key={bid.id} bid={bid} />
+            ))}
+          </div>
+        </>
       )}
 
       <AnalysisPanel

@@ -19,6 +19,7 @@ interface ProjectTabsProps {
   initialAnalysis: BidAnalysisRecord | null;
   initialMessages: MessageWithAuthor[];
   currentUserId: string;
+  targetBudget: number | null;
 }
 
 export function ProjectTabs({
@@ -29,6 +30,7 @@ export function ProjectTabs({
   initialAnalysis,
   initialMessages,
   currentUserId,
+  targetBudget,
 }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="bids">
@@ -60,6 +62,7 @@ export function ProjectTabs({
           projectId={project.id}
           bids={project.bids}
           initialAnalysis={initialAnalysis}
+          targetBudget={targetBudget}
         />
       </TabsContent>
 
