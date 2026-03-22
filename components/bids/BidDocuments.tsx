@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
-import { FileText, Trash2, Upload } from "lucide-react";
+import { FileText, Trash2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { uploadBidDocument, deleteBidDocument } from "@/actions/bids";
+import { DocumentViewer } from "./DocumentViewer";
 import type { BidDocument } from "@/types";
 
 interface BidDocumentsProps {
@@ -18,9 +19,12 @@ export function BidDocuments({
   documents: initialDocuments,
 }: BidDocumentsProps) {
   const [documents, setDocuments] = useState<BidDocument[]>(initialDocuments);
+  const [previewDocId, setPreviewDocId] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const previewDoc = documents.find((d) => d.id === previewDocId) ?? null;
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -38,17 +42,15 @@ export function BidDocuments({
     startTransition(async () => {
       const result = await uploadBidDocument(bidId, projectId, formData);
       if (result.success) {
-        // Optimistic append — real data will refresh on nav
-        setDocuments((prev) => [
-          ...prev,
-          {
-            id: result.data.id,
-            bid_id: bidId,
-            filename: result.data.filename,
-            storage_path: "",
-            created_at: new Date().toISOString(),
-          },
-        ]);
+        const newDoc: BidDocument = {
+          id: result.data.id,
+          bid_id: bidId,
+          filename: result.data.filename,
+          storage_path: result.data.storage_path,
+          created_at: new Date().toISOString(),
+        };
+        setDocuments((prev) => [...prev, newDoc]);
+        setPreviewDocId(result.data.id);
       } else {
         setUploadError(result.error);
       }
@@ -61,6 +63,7 @@ export function BidDocuments({
       const result = await deleteBidDocument(documentId, projectId);
       if (result.success) {
         setDocuments((prev) => prev.filter((d) => d.id !== documentId));
+        if (previewDocId === documentId) setPreviewDocId(null);
       }
     });
   }
@@ -72,7 +75,12 @@ export function BidDocuments({
           {documents.map((doc) => (
             <li
               key={doc.id}
-              className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm"
+              onClick={() => setPreviewDocId(doc.id === previewDocId ? null : doc.id)}
+              className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors ${
+                doc.id === previewDocId
+                  ? "bg-indigo-50 border-indigo-200"
+                  : "border-zinc-200 hover:bg-zinc-50"
+              }`}
             >
               <div className="flex items-center gap-2 text-zinc-700 min-w-0">
                 <FileText size={14} className="shrink-0 text-zinc-400" />
@@ -80,7 +88,10 @@ export function BidDocuments({
               </div>
               <button
                 type="button"
-                onClick={() => handleDelete(doc.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(doc.id);
+                }}
                 disabled={isPending}
                 className="ml-3 shrink-0 text-zinc-400 hover:text-red-500 transition-colors disabled:opacity-50"
               >
@@ -89,6 +100,15 @@ export function BidDocuments({
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Inline preview */}
+      {previewDoc && (
+        <div className="border border-zinc-200 rounded-lg overflow-hidden">
+          <div className="h-80">
+            <DocumentViewer document={previewDoc} />
+          </div>
+        </div>
       )}
 
       <div>

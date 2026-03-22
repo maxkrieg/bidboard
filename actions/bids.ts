@@ -495,7 +495,7 @@ export async function uploadBidDocument(
   bidId: string,
   projectId: string,
   formData: FormData
-): Promise<ActionResult<{ id: string; filename: string }>> {
+): Promise<ActionResult<{ id: string; filename: string; storage_path: string }>> {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -528,7 +528,7 @@ export async function uploadBidDocument(
   const { data: doc, error: dbError } = await supabase
     .from("bid_documents")
     .insert({ bid_id: bidId, filename: file.name, storage_path: storagePath })
-    .select("id, filename")
+    .select("id, filename, storage_path")
     .single();
 
   if (dbError || !doc) {
@@ -536,7 +536,7 @@ export async function uploadBidDocument(
     return { success: false, error: "Failed to record document." };
   }
 
-  return { success: true, data: { id: doc.id, filename: doc.filename } };
+  return { success: true, data: { id: doc.id, filename: doc.filename, storage_path: doc.storage_path } };
 }
 
 // ── deleteBidDocument ─────────────────────────────────────────────────────────
