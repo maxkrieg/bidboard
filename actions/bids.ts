@@ -191,6 +191,27 @@ export async function createBid(
     if (liError) console.error("[createBid] line_items insert", liError);
   }
 
+  // Move temp document to permanent path and attach to bid
+  const tempPath = formData.get("temp_storage_path") as string | null;
+  const tempDocFilename = formData.get("temp_document_filename") as string | null;
+  if (tempPath && tempDocFilename) {
+    const ext = tempDocFilename.split(".").pop() ?? "pdf";
+    const permanentPath = `${projectId}/${bid.id}/${Date.now()}.${ext}`;
+    const adminForDoc = createAdminClient();
+    const { error: moveError } = await adminForDoc.storage
+      .from("bid-documents")
+      .move(tempPath, permanentPath);
+    if (!moveError) {
+      await adminForDoc.from("bid_documents").insert({
+        bid_id: bid.id,
+        filename: tempDocFilename,
+        storage_path: permanentPath,
+      });
+    } else {
+      console.error("[createBid] temp file move failed", moveError);
+    }
+  }
+
   // Fire enrichment — best-effort, non-blocking
   // Consider just defined as function in this file rather than self-referencing API route
   try {
@@ -380,6 +401,27 @@ export async function updateBid(
   } catch (e) {
     // non-blocking
     console.error("[updateBid] enrichment fetch failed", e);
+  }
+
+  // Move temp document to permanent path and attach to bid
+  const tempPathUpdate = formData.get("temp_storage_path") as string | null;
+  const tempDocFilenameUpdate = formData.get("temp_document_filename") as string | null;
+  if (tempPathUpdate && tempDocFilenameUpdate) {
+    const ext = tempDocFilenameUpdate.split(".").pop() ?? "pdf";
+    const permanentPath = `${projectId}/${bidId}/${Date.now()}.${ext}`;
+    const adminForDoc = createAdminClient();
+    const { error: moveError } = await adminForDoc.storage
+      .from("bid-documents")
+      .move(tempPathUpdate, permanentPath);
+    if (!moveError) {
+      await adminForDoc.from("bid_documents").insert({
+        bid_id: bidId,
+        filename: tempDocFilenameUpdate,
+        storage_path: permanentPath,
+      });
+    } else {
+      console.error("[updateBid] temp file move failed", moveError);
+    }
   }
 
   return { success: true, data: { id: bidId } };

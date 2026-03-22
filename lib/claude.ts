@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import type { BidAnalysis } from "@/types";
+import type { BidAnalysis, BidExtractionResult } from "@/types";
 
 export const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -70,6 +70,94 @@ Guidelines:
 - Keep all strings concise — 1-2 sentences max per item
 - Include an entry for every bid in the bids array
 `;
+
+export const EXTRACT_BID_PROMPT = `
+You are extracting structured data from a contractor bid document for a home improvement project.
+
+Analyze this document and extract all available information. Respond ONLY with a valid JSON object — no preamble, no markdown, no explanation.
+
+Return this exact structure:
+{
+  "contractor": {
+    "name": string | null,
+    "phone": string | null,
+    "email": string | null,
+    "website": string | null,
+    "address": string | null,
+    "license_number": string | null
+  },
+  "bid": {
+    "total_price": number | null,
+    "bid_date": string | null,
+    "expiry_date": string | null,
+    "estimated_days": number | null,
+    "notes": string | null
+  },
+  "line_items": [
+    {
+      "description": string,
+      "quantity": number | null,
+      "unit": string | null,
+      "unit_price": number | null,
+      "total_price": number | null
+    }
+  ],
+  "confidence": {
+    "overall": "high" | "medium" | "low",
+    "notes": string
+  }
+}
+
+Guidelines:
+- Return null for any field you cannot find or confidently extract
+- For total_price, return a number only (no $ or commas)
+- For dates, convert to YYYY-MM-DD format if possible
+- For estimated_days, convert weeks/months to days if specified that way
+- For line items, extract every line you can find — even if quantity/unit are missing
+- If the document is not a contractor bid, return all fields as null and set confidence.overall to "low"
+- Never guess or hallucinate values — null is always better than a wrong value
+`;
+
+export async function extractBidFromDocument(
+  fileBase64: string,
+  mediaType: "application/pdf" | "image/jpeg" | "image/png" | "image/webp"
+): Promise<BidExtractionResult> {
+  const isPdf = mediaType === "application/pdf";
+
+  type ContentBlock =
+    | { type: "document"; source: { type: "base64"; media_type: string; data: string } }
+    | { type: "image"; source: { type: "base64"; media_type: string; data: string } }
+    | { type: "text"; text: string };
+
+  const fileBlock: ContentBlock = isPdf
+    ? { type: "document", source: { type: "base64", media_type: mediaType, data: fileBase64 } }
+    : { type: "image", source: { type: "base64", media_type: mediaType, data: fileBase64 } };
+
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 2048,
+    messages: [
+      {
+        role: "user",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        content: [fileBlock, { type: "text", text: EXTRACT_BID_PROMPT }] as any,
+      },
+    ],
+  });
+
+  const text = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("");
+
+  const clean = text.replace(/```json|```/g, "").trim();
+
+  try {
+    return JSON.parse(clean) as BidExtractionResult;
+  } catch {
+    throw new Error("Failed to parse extraction response");
+  }
+}
 
 export async function analyzeBids(
   bids: BidPromptInput[],

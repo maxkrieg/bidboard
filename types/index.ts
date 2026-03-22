@@ -145,6 +145,35 @@ export interface MessageWithAuthor extends Message {
   author: { full_name: string | null; avatar_url: string | null; email: string };
 }
 
+export type BidExtractionResult = {
+  contractor: {
+    name: string | null
+    phone: string | null
+    email: string | null
+    website: string | null
+    address: string | null
+    license_number: string | null
+  }
+  bid: {
+    total_price: number | null
+    bid_date: string | null
+    expiry_date: string | null
+    estimated_days: number | null
+    notes: string | null
+  }
+  line_items: {
+    description: string
+    quantity: number | null
+    unit: string | null
+    unit_price: number | null
+    total_price: number | null
+  }[]
+  confidence: {
+    overall: 'high' | 'medium' | 'low'
+    notes: string
+  }
+}
+
 export type NotificationType =
   | "invite"
   | "bid_added"

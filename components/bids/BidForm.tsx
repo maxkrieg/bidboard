@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LineItemsTable, type LineItemInput } from "./LineItemsTable";
 import { BidDocuments } from "./BidDocuments";
+import { DocumentUploadZone } from "./DocumentUploadZone";
+import { AutoFillIndicator } from "./AutoFillIndicator";
 import { createBid, updateBid } from "@/actions/bids";
-import type { BidWithMeta, ActionResult } from "@/types";
+import type { BidWithMeta, ActionResult, BidExtractionResult } from "@/types";
 
 interface BidFormProps {
   projectId: string;
@@ -37,6 +39,27 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
     FormData
   >(action, null);
 
+  const [fieldValues, setFieldValues] = useState({
+    contractor_name: bid?.contractor.name ?? "",
+    contractor_phone: bid?.contractor.phone ?? "",
+    contractor_email: bid?.contractor.email ?? "",
+    contractor_website: bid?.contractor.website ?? "",
+    contractor_location: bid?.contractor.location ?? projectLocation,
+    total_price: bid?.total_price?.toString() ?? "",
+    bid_date: bid?.bid_date ?? "",
+    expiry_date: bid?.expiry_date ?? "",
+    estimated_days: bid?.estimated_days?.toString() ?? "",
+    notes: bid?.notes ?? "",
+  });
+
+  const [autoFilledFields, setAutoFilledFields] = useState<Set<string>>(
+    new Set()
+  );
+  const [extractionResult, setExtractionResult] =
+    useState<BidExtractionResult | null>(null);
+  const [tempStoragePath, setTempStoragePath] = useState<string | null>(null);
+  const [tempFilename, setTempFilename] = useState<string | null>(null);
+
   const [lineItems, setLineItems] = useState<LineItemInput[]>(
     bid?.line_items.map((li) => ({
       description: li.description,
@@ -44,10 +67,6 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
       unit: li.unit ?? "",
       unit_price: li.unit_price,
     })) ?? []
-  );
-
-  const [totalPriceValue, setTotalPriceValue] = useState(
-    bid?.total_price?.toString() ?? ""
   );
 
   // Redirect on success
@@ -61,11 +80,83 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
     }
   }, [state, isEdit, projectId, bid?.id, router]);
 
+  function updateField(name: keyof typeof fieldValues, value: string) {
+    setFieldValues((prev) => ({ ...prev, [name]: value }));
+    setAutoFilledFields((prev) => {
+      const next = new Set(prev);
+      next.delete(name);
+      return next;
+    });
+  }
+
+  function handleExtraction(result: BidExtractionResult, filename: string, tempPath: string | null) {
+    setTempStoragePath(tempPath);
+    setTempFilename(filename);
+    const updates: Partial<typeof fieldValues> = {};
+    const filled = new Set<string>();
+
+    if (result.contractor.name) {
+      updates.contractor_name = result.contractor.name;
+      filled.add("contractor_name");
+    }
+    if (result.contractor.phone) {
+      updates.contractor_phone = result.contractor.phone;
+      filled.add("contractor_phone");
+    }
+    if (result.contractor.email) {
+      updates.contractor_email = result.contractor.email;
+      filled.add("contractor_email");
+    }
+    if (result.contractor.website) {
+      updates.contractor_website = result.contractor.website;
+      filled.add("contractor_website");
+    }
+    if (result.contractor.address) {
+      updates.contractor_location = result.contractor.address;
+      filled.add("contractor_location");
+    }
+    if (result.bid.total_price != null) {
+      updates.total_price = String(result.bid.total_price);
+      filled.add("total_price");
+    }
+    if (result.bid.bid_date) {
+      updates.bid_date = result.bid.bid_date;
+      filled.add("bid_date");
+    }
+    if (result.bid.expiry_date) {
+      updates.expiry_date = result.bid.expiry_date;
+      filled.add("expiry_date");
+    }
+    if (result.bid.estimated_days != null) {
+      updates.estimated_days = String(result.bid.estimated_days);
+      filled.add("estimated_days");
+    }
+    if (result.bid.notes) {
+      updates.notes = result.bid.notes;
+      filled.add("notes");
+    }
+    if (result.line_items.length > 0) {
+      setLineItems(
+        result.line_items.map((li) => ({
+          description: li.description,
+          quantity: li.quantity ?? 1,
+          unit: li.unit ?? "",
+          unit_price: li.unit_price ?? 0,
+        }))
+      );
+      filled.add("line_items");
+    }
+
+    setFieldValues((prev) => ({ ...prev, ...updates }));
+    setAutoFilledFields(filled);
+    setExtractionResult(result);
+  }
+
   const lineItemsSubtotal = lineItems.reduce(
     (sum, item) => sum + item.quantity * item.unit_price,
     0
   );
-  const totalPrice = parseFloat(totalPriceValue) || 0;
+  const totalPrice = parseFloat(fieldValues.total_price) || 0;
   const mismatch = Math.abs(lineItemsSubtotal - totalPrice) > 0.01;
 
   return (
@@ -77,6 +168,32 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
         value={JSON.stringify(lineItems)}
       />
 
+      {/* ── Document upload zone ────────────────────────────────────────── */}
+      <DocumentUploadZone
+        projectId={projectId}
+        onExtracted={(result, filename, tempPath) => handleExtraction(result, filename, tempPath)}
+        disabled={isPending}
+      />
+      {tempStoragePath && (
+        <input type="hidden" name="temp_storage_path" value={tempStoragePath} />
+      )}
+      {tempFilename && (
+        <input type="hidden" name="temp_document_filename" value={tempFilename} />
+      )}
+
+      {/* Low confidence warning */}
+      {extractionResult?.confidence.overall === "low" && (
+        <div className="rounded-md bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          <p className="font-medium">
+            ⚠ We had trouble reading this document clearly. Please review all
+            fields carefully.
+          </p>
+          <p className="mt-1 text-amber-700">
+            {extractionResult.confidence.notes}
+          </p>
+        </div>
+      )}
+
       {/* ── Contractor ─────────────────────────────────────────────────── */}
       <section>
         <h2 className="text-base font-semibold text-zinc-900 mb-4">
@@ -84,51 +201,83 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <Label htmlFor="contractor_name">Name *</Label>
+            <Label htmlFor="contractor_name">
+              Name *
+              {autoFilledFields.has("contractor_name") && <AutoFillIndicator />}
+            </Label>
             <Input
               id="contractor_name"
               name="contractor_name"
               required
-              defaultValue={bid?.contractor.name ?? ""}
+              value={fieldValues.contractor_name}
+              onChange={(e) => updateField("contractor_name", e.target.value)}
               placeholder="ABC Roofing Co."
             />
           </div>
           <div>
-            <Label htmlFor="contractor_phone">Phone</Label>
+            <Label htmlFor="contractor_phone">
+              Phone
+              {autoFilledFields.has("contractor_phone") && (
+                <AutoFillIndicator />
+              )}
+            </Label>
             <Input
               id="contractor_phone"
               name="contractor_phone"
               type="tel"
-              defaultValue={bid?.contractor.phone ?? ""}
+              value={fieldValues.contractor_phone}
+              onChange={(e) => updateField("contractor_phone", e.target.value)}
               placeholder="(555) 000-0000"
             />
           </div>
           <div>
-            <Label htmlFor="contractor_email">Email</Label>
+            <Label htmlFor="contractor_email">
+              Email
+              {autoFilledFields.has("contractor_email") && (
+                <AutoFillIndicator />
+              )}
+            </Label>
             <Input
               id="contractor_email"
               name="contractor_email"
               type="email"
-              defaultValue={bid?.contractor.email ?? ""}
+              value={fieldValues.contractor_email}
+              onChange={(e) => updateField("contractor_email", e.target.value)}
               placeholder="contact@contractor.com"
             />
           </div>
           <div>
-            <Label htmlFor="contractor_website">Website</Label>
+            <Label htmlFor="contractor_website">
+              Website
+              {autoFilledFields.has("contractor_website") && (
+                <AutoFillIndicator />
+              )}
+            </Label>
             <Input
               id="contractor_website"
               name="contractor_website"
               type="url"
-              defaultValue={bid?.contractor.website ?? ""}
+              value={fieldValues.contractor_website}
+              onChange={(e) =>
+                updateField("contractor_website", e.target.value)
+              }
               placeholder="https://contractor.com"
             />
           </div>
           <div>
-            <Label htmlFor="contractor_location">Location</Label>
+            <Label htmlFor="contractor_location">
+              Location
+              {autoFilledFields.has("contractor_location") && (
+                <AutoFillIndicator />
+              )}
+            </Label>
             <Input
               id="contractor_location"
               name="contractor_location"
-              defaultValue={bid?.contractor.location ?? projectLocation}
+              value={fieldValues.contractor_location}
+              onChange={(e) =>
+                updateField("contractor_location", e.target.value)
+              }
               placeholder="City, ST"
             />
           </div>
@@ -144,7 +293,10 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="total_price">Total Price *</Label>
+            <Label htmlFor="total_price">
+              Total Price *
+              {autoFilledFields.has("total_price") && <AutoFillIndicator />}
+            </Label>
             <Input
               id="total_price"
               name="total_price"
@@ -152,49 +304,65 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
               min="0"
               step="0.01"
               required
-              value={totalPriceValue}
-              onChange={(e) => setTotalPriceValue(e.target.value)}
+              value={fieldValues.total_price}
+              onChange={(e) => updateField("total_price", e.target.value)}
               placeholder="0.00"
             />
           </div>
           <div>
-            <Label htmlFor="bid_date">Bid Date *</Label>
+            <Label htmlFor="bid_date">
+              Bid Date *
+              {autoFilledFields.has("bid_date") && <AutoFillIndicator />}
+            </Label>
             <Input
               id="bid_date"
               name="bid_date"
               type="date"
               required
-              defaultValue={bid?.bid_date ?? ""}
+              value={fieldValues.bid_date}
+              onChange={(e) => updateField("bid_date", e.target.value)}
             />
           </div>
           <div>
-            <Label htmlFor="expiry_date">Expiry Date</Label>
+            <Label htmlFor="expiry_date">
+              Expiry Date
+              {autoFilledFields.has("expiry_date") && <AutoFillIndicator />}
+            </Label>
             <Input
               id="expiry_date"
               name="expiry_date"
               type="date"
-              defaultValue={bid?.expiry_date ?? ""}
+              value={fieldValues.expiry_date}
+              onChange={(e) => updateField("expiry_date", e.target.value)}
             />
           </div>
           <div>
-            <Label htmlFor="estimated_days">Estimated Days</Label>
+            <Label htmlFor="estimated_days">
+              Estimated Days
+              {autoFilledFields.has("estimated_days") && <AutoFillIndicator />}
+            </Label>
             <Input
               id="estimated_days"
               name="estimated_days"
               type="number"
               min="1"
               step="1"
-              defaultValue={bid?.estimated_days ?? ""}
+              value={fieldValues.estimated_days}
+              onChange={(e) => updateField("estimated_days", e.target.value)}
               placeholder="14"
             />
           </div>
           <div className="sm:col-span-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">
+              Notes
+              {autoFilledFields.has("notes") && <AutoFillIndicator />}
+            </Label>
             <textarea
               id="notes"
               name="notes"
               rows={3}
-              defaultValue={bid?.notes ?? ""}
+              value={fieldValues.notes}
+              onChange={(e) => updateField("notes", e.target.value)}
               placeholder="Any additional details about this bid..."
               className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
             />
@@ -208,6 +376,7 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
       <section>
         <h2 className="text-base font-semibold text-zinc-900 mb-4">
           Line Items
+          {autoFilledFields.has("line_items") && <AutoFillIndicator />}
         </h2>
 
         {mismatch && lineItems.length > 0 && (
