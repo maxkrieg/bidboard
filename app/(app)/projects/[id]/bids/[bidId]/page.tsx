@@ -10,7 +10,6 @@ import { BidStatusActions } from "@/components/bids/BidStatusActions";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DeleteBidButton } from "@/components/bids/DeleteBidButton";
 import { CommentsPanel } from "@/components/comments/CommentsPanel";
-import { LineItemBreakdownChart } from "@/components/bids/LineItemBreakdownChart";
 import { Button } from "@/components/ui/button";
 import type { CommentWithAuthor } from "@/types";
 
@@ -160,11 +159,6 @@ export default async function BidDetailPage({
                 readonly
               />
             </div>
-          )}
-
-          {/* Cost breakdown chart */}
-          {bid.line_items.length > 0 && (
-            <LineItemBreakdownChart lineItems={bid.line_items} />
           )}
 
           {/* Documents */}

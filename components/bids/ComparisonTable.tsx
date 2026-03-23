@@ -2,7 +2,6 @@ import type { BidWithMeta } from "@/types";
 
 interface ComparisonTableProps {
   bids: BidWithMeta[];
-  targetBudget?: number | null;
 }
 
 function formatCurrency(value: number | null): string {
@@ -13,7 +12,7 @@ function formatCurrency(value: number | null): string {
   }).format(value);
 }
 
-export function ComparisonTable({ bids, targetBudget }: ComparisonTableProps) {
+export function ComparisonTable({ bids }: ComparisonTableProps) {
   // Union of all line item descriptions across all bids
   const allDescriptions = Array.from(
     new Set(
@@ -107,32 +106,6 @@ export function ComparisonTable({ bids, targetBudget }: ComparisonTableProps) {
               );
             })}
           </tr>
-
-          {/* Budget utilization row */}
-          {targetBudget != null && (
-            <tr className="border-t border-zinc-200 bg-zinc-50">
-              <td className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">
-                % of Budget
-                <span className="block text-zinc-400 font-normal normal-case">
-                  Target: {formatCurrency(targetBudget)}
-                </span>
-              </td>
-              {bids.map((bid) => {
-                const pct = (bid.total_price / targetBudget) * 100;
-                const over = pct > 100;
-                return (
-                  <td
-                    key={bid.id}
-                    className={`px-4 py-3 text-right text-sm font-medium ${
-                      over ? "text-red-600" : "text-emerald-700"
-                    }`}
-                  >
-                    {Math.round(pct)}%
-                  </td>
-                );
-              })}
-            </tr>
-          )}
         </tbody>
       </table>
     </div>

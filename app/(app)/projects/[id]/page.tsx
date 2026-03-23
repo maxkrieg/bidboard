@@ -71,7 +71,6 @@ export default async function ProjectPage({
         initialAnalysis={(analysis as BidAnalysisRecord | null) ?? null}
         initialMessages={(initialMessages ?? []) as MessageWithAuthor[]}
         currentUserId={user?.id ?? ""}
-        targetBudget={result.data.target_budget}
       />
     </div>
   );
