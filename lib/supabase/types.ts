@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          actor_id: string
+          created_at: string
+          event_type: Database["public"]["Enums"]["activity_event_type"]
+          id: string
+          payload: Json
+          project_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          event_type: Database["public"]["Enums"]["activity_event_type"]
+          id?: string
+          payload?: Json
+          project_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["activity_event_type"]
+          id?: string
+          payload?: Json
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_log_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bid_analyses: {
         Row: {
           analysis: Json
@@ -112,6 +154,48 @@ export type Database = {
             columns: ["bid_id"]
             isOneToOne: false
             referencedRelation: "bids"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bid_ratings: {
+        Row: {
+          bid_id: string
+          created_at: string
+          id: string
+          rating: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bid_id: string
+          created_at?: string
+          id?: string
+          rating: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bid_id?: string
+          created_at?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bid_ratings_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bid_ratings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
             referencedColumns: ["id"]
           },
         ]
@@ -480,7 +564,16 @@ export type Database = {
       is_project_member: { Args: { p_project_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      activity_event_type:
+        | "bid_created"
+        | "bid_updated"
+        | "bid_status_changed"
+        | "bid_deleted"
+        | "document_uploaded"
+        | "collaborator_joined"
+        | "analysis_completed"
+        | "comment_added"
+        | "message_sent"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -607,6 +700,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      activity_event_type: [
+        "bid_created",
+        "bid_updated",
+        "bid_status_changed",
+        "bid_deleted",
+        "document_uploaded",
+        "collaborator_joined",
+        "analysis_completed",
+        "comment_added",
+        "message_sent",
+      ],
+    },
   },
 } as const

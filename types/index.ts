@@ -85,10 +85,24 @@ export interface Bid {
   created_at: string;
 }
 
+export interface BidRating {
+  id: string;
+  bid_id: string;
+  user_id: string;
+  rating: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BidRatingWithUser extends BidRating {
+  user: { full_name: string | null; avatar_url: string | null; email: string };
+}
+
 export interface BidWithMeta extends Bid {
   contractor: Contractor;
   line_items: BidLineItem[];
   documents: BidDocument[];
+  ratings: BidRatingWithUser[];
 }
 
 export interface ProjectWithMeta extends Project {
@@ -181,6 +195,30 @@ export type NotificationType =
   | "comment_added"
   | "message_added"
   | "analysis_ready";
+
+export type ActivityEventType =
+  | "bid_created"
+  | "bid_updated"
+  | "bid_status_changed"
+  | "bid_deleted"
+  | "document_uploaded"
+  | "collaborator_joined"
+  | "analysis_completed"
+  | "comment_added"
+  | "message_sent";
+
+export interface ActivityLog {
+  id: string;
+  project_id: string;
+  actor_id: string;
+  event_type: ActivityEventType;
+  payload: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface ActivityLogWithActor extends ActivityLog {
+  actor: { full_name: string | null; avatar_url: string | null; email: string };
+}
 
 export interface Notification {
   id: string;

@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity";
 import type { ActionResult, Comment } from "@/types";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -81,14 +82,16 @@ export async function createComment(
     return { success: false, error: error?.message ?? "Failed to create comment" };
   }
 
-  // Fire comment_added notification — best-effort, non-blocking
+  // Fire comment_added notification + log activity — best-effort, non-blocking
   try {
     const { data: bid } = await supabase
       .from("bids")
-      .select("project_id")
+      .select("project_id, contractor:contractors(name)")
       .eq("id", bidId)
       .single();
     if (bid) {
+      const bidName =
+        (bid.contractor as { name?: string } | null)?.name ?? "a bid";
       const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
       await fetch(`${baseUrl}/api/notifications`, {
         method: "POST",
@@ -106,9 +109,14 @@ export async function createComment(
           },
         }),
       }).catch(() => {});
+
+      await logActivity(bid.project_id, user.id, "comment_added", {
+        bid_id: bidId,
+        bid_name: bidName,
+      });
     }
   } catch (e) {
-    console.error("[createComment] notification fetch failed", e);
+    console.error("[createComment] notification/activity failed", e);
   }
 
   return { success: true, data: data as Comment };

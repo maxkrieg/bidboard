@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
+import { logActivity } from "@/lib/activity";
 import type { ActionResult, Message } from "@/types";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ export async function createMessage(
     return { success: false, error: error?.message ?? "Failed to send message" };
   }
 
-  // Fire message_added notification — best-effort, non-blocking
+  // Fire message_added notification + log activity — best-effort, non-blocking
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     await fetch(`${baseUrl}/api/notifications`, {
@@ -60,8 +61,10 @@ export async function createMessage(
         },
       }),
     }).catch(() => {});
+
+    await logActivity(projectId, user.id, "message_sent", {});
   } catch (e) {
-    console.error("[createMessage] notification fetch failed", e);
+    console.error("[createMessage] notification/activity failed", e);
   }
 
   return { success: true, data: data as Message };

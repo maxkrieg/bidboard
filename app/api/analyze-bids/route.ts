@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/activity";
 import { analyzeBids } from "@/lib/claude";
 import type { BidPromptInput } from "@/lib/claude";
 import type { BidWithMeta } from "@/types";
@@ -132,7 +133,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Fire analysis_ready notification — best-effort, non-blocking
+  // Fire analysis_ready notification + log activity — best-effort, non-blocking
   try {
     const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
     await fetch(`${appUrl}/api/notifications`, {
@@ -147,8 +148,12 @@ export async function POST(request: Request) {
         triggered_by: user.id,
       }),
     }).catch(() => {});
+
+    await logActivity(project_id, user.id, "analysis_completed", {
+      bid_count: bids.length,
+    });
   } catch (e) {
-    console.error("[analyze-bids] notification fetch failed", e);
+    console.error("[analyze-bids] notification/activity failed", e);
   }
 
   return NextResponse.json(record);

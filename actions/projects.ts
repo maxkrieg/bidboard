@@ -122,7 +122,8 @@ export async function getProjectById(
         *,
         contractor:contractors (*),
         line_items:bid_line_items (*),
-        documents:bid_documents (*)
+        documents:bid_documents (*),
+        ratings:bid_ratings (*, user:users(full_name, avatar_url, email))
       )
     `
     )

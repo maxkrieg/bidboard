@@ -30,6 +30,12 @@ function statusBorderClass(status: string): string {
 export function BidCard({ bid }: BidCardProps) {
   const expiringSoon = isExpiringSoon(bid.expiry_date);
 
+  const ratings = bid.ratings ?? [];
+  const avgRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+      : null;
+
   return (
     <Link href={`/projects/${bid.project_id}/bids/${bid.id}`}>
       <div
@@ -70,6 +76,17 @@ export function BidCard({ bid }: BidCardProps) {
               </span>
             </div>
           )}
+          <div className="flex items-center gap-1">
+            <span className="text-amber-400">★</span>
+            {avgRating !== null ? (
+              <span>
+                {avgRating.toFixed(1)} · {ratings.length}{" "}
+                {ratings.length === 1 ? "rating" : "ratings"}
+              </span>
+            ) : (
+              <span className="text-zinc-400">No ratings yet</span>
+            )}
+          </div>
         </div>
       </div>
     </Link>

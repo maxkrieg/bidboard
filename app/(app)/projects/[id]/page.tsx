@@ -5,7 +5,7 @@ import { ProjectTabs } from "@/components/projects/ProjectTabs";
 import { ArchiveDropdown } from "@/components/projects/ArchiveDropdown";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import type { BidAnalysisRecord, MessageWithAuthor } from "@/types";
+import type { BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor } from "@/types";
 
 export default async function ProjectPage({
   params,
@@ -44,6 +44,14 @@ export default async function ProjectPage({
     .eq("project_id", id)
     .order("created_at", { ascending: true });
 
+  // Fetch initial activity for the Activity tab
+  const { data: initialActivity } = await supabase
+    .from("activity_log")
+    .select("*, actor:users(full_name, avatar_url, email)")
+    .eq("project_id", id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
   return (
     <div>
       <Link
@@ -70,6 +78,7 @@ export default async function ProjectPage({
         ownerName={ownerProfile?.full_name ?? null}
         initialAnalysis={(analysis as BidAnalysisRecord | null) ?? null}
         initialMessages={(initialMessages ?? []) as MessageWithAuthor[]}
+        initialActivity={(initialActivity ?? []) as ActivityLogWithActor[]}
         currentUserId={user?.id ?? ""}
       />
     </div>

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/activity";
 import type { ActionResult, Bid, BidStatus, BidWithMeta } from "@/types";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -261,6 +262,14 @@ export async function createBid(
     console.error("[createBid] notification fetch failed", e);
   }
 
+  // Log activity — best-effort, non-blocking
+  try {
+    await logActivity(projectId, user.id, "bid_created", {
+      bid_id: bid.id,
+      bid_name: contractorData.name,
+    });
+  } catch {}
+
   return { success: true, data: { id: bid.id } };
 }
 
@@ -424,6 +433,14 @@ export async function updateBid(
     }
   }
 
+  // Log activity — best-effort, non-blocking
+  try {
+    await logActivity(projectId, user.id, "bid_updated", {
+      bid_id: bidId,
+      bid_name: contractorData.name,
+    });
+  } catch {}
+
   return { success: true, data: { id: bidId } };
 }
 
@@ -442,6 +459,15 @@ export async function deleteBid(bidId: string): Promise<void> {
   const isMember = await assertProjectMember(supabase, projectId, user.id);
   if (!isMember) redirect("/dashboard");
 
+  // Fetch contractor name for activity log before deleting
+  const { data: bidForLog } = await supabase
+    .from("bids")
+    .select("contractor:contractors(name)")
+    .eq("id", bidId)
+    .single();
+  const bidNameForLog =
+    (bidForLog?.contractor as { name?: string } | null)?.name ?? "Unknown";
+
   // Delete documents from storage
   const { data: docs } = await supabase
     .from("bid_documents")
@@ -456,6 +482,13 @@ export async function deleteBid(bidId: string): Promise<void> {
   }
 
   await supabase.from("bids").delete().eq("id", bidId);
+
+  // Log activity — best-effort, non-blocking
+  try {
+    await logActivity(projectId, user.id, "bid_deleted", {
+      bid_name: bidNameForLog,
+    });
+  } catch {}
 
   redirect(`/projects/${projectId}`);
 }
@@ -483,6 +516,16 @@ export async function updateBidStatus(
   if (project?.owner_id !== user.id)
     return { success: false, error: "Only the project owner can change bid status." };
 
+  // Fetch current status + contractor name for activity log
+  const { data: bidForLog } = await supabase
+    .from("bids")
+    .select("status, contractor:contractors(name)")
+    .eq("id", bidId)
+    .single();
+  const oldStatus = bidForLog?.status ?? "pending";
+  const bidNameForLog =
+    (bidForLog?.contractor as { name?: string } | null)?.name ?? "Unknown";
+
   const { error } = await supabase
     .from("bids")
     .update({ status })
@@ -492,6 +535,16 @@ export async function updateBidStatus(
     console.error("[updateBidStatus]", error);
     return { success: false, error: "Failed to update status." };
   }
+
+  // Log activity — best-effort, non-blocking
+  try {
+    await logActivity(projectId, user.id, "bid_status_changed", {
+      bid_id: bidId,
+      bid_name: bidNameForLog,
+      old_status: oldStatus,
+      new_status: status,
+    });
+  } catch {}
 
   if (status === "accepted") {
     const { data: others } = await supabase
@@ -588,6 +641,14 @@ export async function uploadBidDocument(
     return { success: false, error: "Failed to record document." };
   }
 
+  // Log activity — best-effort, non-blocking
+  try {
+    await logActivity(projectId, user.id, "document_uploaded", {
+      bid_id: bidId,
+      filename: file.name,
+    });
+  } catch {}
+
   return { success: true, data: { id: doc.id, filename: doc.filename, storage_path: doc.storage_path } };
 }
 
@@ -648,7 +709,8 @@ export async function getBidById(
       *,
       contractor:contractors (*),
       line_items:bid_line_items (*),
-      documents:bid_documents (*)
+      documents:bid_documents (*),
+      ratings:bid_ratings (*, user:users(full_name, avatar_url, email))
     `
     )
     .eq("id", bidId)

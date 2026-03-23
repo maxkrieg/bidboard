@@ -4,6 +4,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { signInviteToken, verifyInviteToken } from "@/lib/jwt";
+import { logActivity } from "@/lib/activity";
 import type { ActionResult } from "@/types";
 
 const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -160,6 +161,13 @@ export async function acceptInvite(
     console.error("[acceptInvite] update", error);
     return { success: false, error: "Failed to accept invite." };
   }
+
+  // Log activity — best-effort, non-blocking
+  try {
+    await logActivity(projectId, user.id, "collaborator_joined", {
+      invited_email: invitedEmail,
+    });
+  } catch {}
 
   return { success: true, data: { projectId } };
 }

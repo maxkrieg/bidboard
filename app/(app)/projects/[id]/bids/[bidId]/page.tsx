@@ -7,11 +7,12 @@ import { ContractorCard } from "@/components/bids/ContractorCard";
 import { LineItemsTable } from "@/components/bids/LineItemsTable";
 import { BidDocuments } from "@/components/bids/BidDocuments";
 import { BidStatusActions } from "@/components/bids/BidStatusActions";
+import { BidRating } from "@/components/bids/BidRating";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DeleteBidButton } from "@/components/bids/DeleteBidButton";
 import { CommentsPanel } from "@/components/comments/CommentsPanel";
 import { Button } from "@/components/ui/button";
-import type { CommentWithAuthor } from "@/types";
+import type { CommentWithAuthor, BidRatingWithUser } from "@/types";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -142,6 +143,13 @@ export default async function BidDetailPage({
             </h3>
             <BidStatusActions bid={bid} projectId={id} isOwner={isOwner} />
           </div>
+
+          {/* Team ratings */}
+          <BidRating
+            bidId={bidId}
+            currentUserId={user?.id ?? ""}
+            initialRatings={(bid.ratings ?? []) as BidRatingWithUser[]}
+          />
 
           {/* Line items */}
           {bid.line_items.length > 0 && (

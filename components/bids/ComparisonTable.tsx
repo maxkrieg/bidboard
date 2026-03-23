@@ -106,6 +106,39 @@ export function ComparisonTable({ bids }: ComparisonTableProps) {
               );
             })}
           </tr>
+
+          {/* Avg. User Rating row */}
+          <tr className="border-t border-zinc-200 bg-zinc-50">
+            <td className="px-4 py-3 text-xs font-semibold text-zinc-500 uppercase tracking-wide">
+              Avg. User Rating
+            </td>
+            {bids.map((bid) => {
+              const ratings = bid.ratings ?? [];
+              const avg =
+                ratings.length > 0
+                  ? ratings.reduce((sum, r) => sum + r.rating, 0) /
+                    ratings.length
+                  : null;
+              return (
+                <td
+                  key={bid.id}
+                  className="px-4 py-3 text-right text-sm text-zinc-700"
+                >
+                  {avg !== null ? (
+                    <span>
+                      <span className="text-amber-400">★</span>{" "}
+                      {avg.toFixed(1)}{" "}
+                      <span className="text-zinc-400 text-xs">
+                        ({ratings.length})
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="text-zinc-400 text-xs">—</span>
+                  )}
+                </td>
+              );
+            })}
+          </tr>
         </tbody>
       </table>
     </div>

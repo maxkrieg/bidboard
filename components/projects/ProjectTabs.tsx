@@ -9,7 +9,8 @@ import {
 import { CollaboratorsTab } from "./CollaboratorsTab";
 import { BidsTab } from "./BidsTab";
 import { MessagesTab } from "@/components/messages/MessagesTab";
-import type { ProjectWithMeta, BidAnalysisRecord, MessageWithAuthor } from "@/types";
+import { ActivityTimeline } from "./ActivityTimeline";
+import type { ProjectWithMeta, BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor } from "@/types";
 
 interface ProjectTabsProps {
   project: ProjectWithMeta;
@@ -18,6 +19,7 @@ interface ProjectTabsProps {
   ownerName: string | null;
   initialAnalysis: BidAnalysisRecord | null;
   initialMessages: MessageWithAuthor[];
+  initialActivity: ActivityLogWithActor[];
   currentUserId: string;
 }
 
@@ -28,6 +30,7 @@ export function ProjectTabs({
   ownerName,
   initialAnalysis,
   initialMessages,
+  initialActivity,
   currentUserId,
 }: ProjectTabsProps) {
   return (
@@ -51,6 +54,12 @@ export function ProjectTabs({
             className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
           >
             Collaborators
+          </TabsTrigger>
+          <TabsTrigger
+            value="activity"
+            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+          >
+            Activity
           </TabsTrigger>
         </TabsList>
       </div>
@@ -78,6 +87,13 @@ export function ProjectTabs({
           ownerEmail={ownerEmail}
           ownerName={ownerName}
           collaborators={project.collaborators}
+        />
+      </TabsContent>
+
+      <TabsContent value="activity" className="">
+        <ActivityTimeline
+          initialActivity={initialActivity}
+          projectId={project.id}
         />
       </TabsContent>
     </Tabs>
