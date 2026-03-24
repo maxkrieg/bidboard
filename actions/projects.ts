@@ -68,6 +68,60 @@ export async function createProject(
   redirect(`/projects/${data.id}`);
 }
 
+export async function updateProject(
+  projectId: string,
+  _prevState: ActionResult<Project> | null,
+  formData: FormData
+): Promise<ActionResult<Project>> {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: existing } = await supabase
+    .from("projects")
+    .select("owner_id")
+    .eq("id", projectId)
+    .single();
+
+  if (!existing || existing.owner_id !== user.id) {
+    return { success: false, error: "Not authorized." };
+  }
+
+  const parsed = CreateProjectSchema.safeParse({
+    name: formData.get("name"),
+    description: formData.get("description") || undefined,
+    location: formData.get("location"),
+    target_budget: formData.get("target_budget"),
+    target_date: formData.get("target_date"),
+  });
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+
+  const { data, error } = await supabase
+    .from("projects")
+    .update({
+      name: parsed.data.name,
+      description: parsed.data.description ?? null,
+      location: parsed.data.location,
+      target_budget: parsed.data.target_budget ?? null,
+      target_date: parsed.data.target_date || null,
+    })
+    .eq("id", projectId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error("[updateProject]", error);
+    return { success: false, error: "Failed to update project." };
+  }
+
+  redirect(`/projects/${projectId}`);
+}
+
 export async function archiveProject(
   projectId: string
 ): Promise<ActionResult<null>> {
