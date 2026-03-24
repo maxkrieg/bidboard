@@ -13,12 +13,13 @@ interface ProjectCardProps {
   project: Project & {
     bid_count: number;
   };
+  isOwner?: boolean;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, isOwner = true }: ProjectCardProps) {
   return (
     <Link href={`/projects/${project.id}`}>
-      <Card className="border border-zinc-200 border-l-2 border-l-indigo-500 bg-white shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer h-full">
+      <Card className={`border border-zinc-200 border-l-2 ${isOwner ? "border-l-indigo-500" : "border-l-zinc-300"} bg-white shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer h-full`}>
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-base font-semibold text-zinc-900 leading-tight">
