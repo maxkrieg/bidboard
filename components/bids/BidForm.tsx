@@ -13,10 +13,20 @@ import { AutoFillIndicator } from "./AutoFillIndicator";
 import { createBid, updateBid } from "@/actions/bids";
 import type { BidWithMeta, ActionResult, BidExtractionResult } from "@/types";
 
+type PreviousContractor = {
+  id: string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  website: string | null;
+  location: string | null;
+};
+
 interface BidFormProps {
   projectId: string;
   projectLocation: string;
   bid?: BidWithMeta;
+  previousContractors?: PreviousContractor[];
 }
 
 function formatCurrency(value: number): string {
@@ -26,7 +36,7 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
+export function BidForm({ projectId, projectLocation, bid, previousContractors }: BidFormProps) {
   const router = useRouter();
   const isEdit = !!bid;
 
@@ -152,6 +162,19 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
     setExtractionResult(result);
   }
 
+  function handleContractorSelect(contractorId: string) {
+    const c = previousContractors?.find((p) => p.id === contractorId);
+    if (!c) return;
+    setFieldValues((prev) => ({
+      ...prev,
+      contractor_name: c.name,
+      contractor_phone: c.phone ?? "",
+      contractor_email: c.email ?? "",
+      contractor_website: c.website ?? "",
+      contractor_location: c.location ?? prev.contractor_location,
+    }));
+  }
+
   const lineItemsSubtotal = lineItems.reduce(
     (sum, item) => sum + item.quantity * item.unit_price,
     0
@@ -199,6 +222,23 @@ export function BidForm({ projectId, projectLocation, bid }: BidFormProps) {
         <h2 className="text-base font-semibold text-zinc-900 mb-4">
           Contractor
         </h2>
+        {!isEdit && previousContractors && previousContractors.length > 0 && (
+          <div className="space-y-1.5 mb-4">
+            <Label htmlFor="previous_contractor">Previous Contractors</Label>
+            <select
+              id="previous_contractor"
+              onChange={(e) => handleContractorSelect(e.target.value)}
+              defaultValue=""
+              className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+            >
+              <option value="" disabled>Select a previous contractor…</option>
+              {previousContractors.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            <p className="text-xs text-zinc-400">Selecting will pre-fill the fields below.</p>
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <Label htmlFor="contractor_name">
