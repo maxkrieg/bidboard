@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
 import { NotificationBell } from "@/components/shared/NotificationBell";
+import { UserMenu } from "@/components/shared/UserMenu";
 import type { Notification } from "@/types";
 
 export default async function AppLayout({
@@ -48,11 +49,7 @@ export default async function AppLayout({
               initialUnreadCount={unreadCount}
               initialNotifications={typedNotifications}
             />
-            <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-              <span className="text-sm font-semibold text-indigo-700">
-                {initial}
-              </span>
-            </div>
+            <UserMenu email={user.email ?? ""} initial={initial} />
           </div>
         </div>
       </header>
