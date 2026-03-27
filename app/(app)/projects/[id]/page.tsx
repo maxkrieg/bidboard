@@ -3,10 +3,11 @@ import { getProjectById } from "@/actions/projects";
 import { createServerClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/projects/ProjectTabs";
 import { ArchiveDropdown } from "@/components/projects/ArchiveDropdown";
+import { ProjectSummaryBanner } from "@/components/projects/ProjectSummaryBanner";
 import Link from "next/link";
 import { ChevronLeft, Pencil, MapPin, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor } from "@/types";
+import type { BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor, ProjectSummaryRecord } from "@/types";
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -60,6 +61,13 @@ export default async function ProjectPage({
     .eq("project_id", id)
     .order("created_at", { ascending: false })
     .limit(50);
+
+  // Fetch AI project summary
+  const { data: projectSummary } = await supabase
+    .from("project_summaries")
+    .select("*")
+    .eq("project_id", id)
+    .maybeSingle();
 
   return (
     <div>
@@ -115,6 +123,11 @@ export default async function ProjectPage({
           </div>
         )}
       </div>
+
+      <ProjectSummaryBanner
+        projectId={id}
+        initialSummary={(projectSummary as ProjectSummaryRecord | null) ?? null}
+      />
 
       <ProjectTabs
         project={result.data}

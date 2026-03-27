@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
+import { triggerProjectSummary } from "@/lib/activity";
 import type { ActionResult, Project, ProjectWithMeta } from "@/types";
 
 // ---- Zod Schemas ----
@@ -65,6 +66,7 @@ export async function createProject(
     return { success: false, error: "Failed to create project." };
   }
 
+  triggerProjectSummary(data.id);
   redirect(`/projects/${data.id}`);
 }
 
@@ -119,6 +121,7 @@ export async function updateProject(
     return { success: false, error: "Failed to update project." };
   }
 
+  triggerProjectSummary(projectId);
   redirect(`/projects/${projectId}`);
 }
 

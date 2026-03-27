@@ -168,6 +168,76 @@ export async function extractBidFromDocument(
   }
 }
 
+// ── Project Summary ───────────────────────────────────────────────────────────
+
+export interface ProjectSummaryInput {
+  name: string;
+  location: string;
+  description: string | null;
+  target_budget: number | null;
+  target_date: string | null;
+  bids: Array<{
+    contractor_name: string;
+    total_price: number;
+    status: string;
+    avg_rating: number | null;
+  }>;
+}
+
+const PROJECT_SUMMARY_PROMPT = (input: ProjectSummaryInput): string => {
+  const budgetStr = input.target_budget
+    ? `$${input.target_budget.toLocaleString()}`
+    : "not set";
+  const dateStr = input.target_date
+    ? new Date(input.target_date).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      })
+    : "not set";
+
+  const bidsStr =
+    input.bids.length === 0
+      ? "No bids received yet."
+      : input.bids
+          .map(
+            (b) =>
+              `- ${b.contractor_name}: $${b.total_price.toLocaleString()} (${b.status})${b.avg_rating ? ` [rated ${b.avg_rating}/5]` : ""}`
+          )
+          .join("\n");
+
+  return `You are a project status advisor for a home improvement app. Write a 2-3 sentence plain-English status summary for this project. Be direct and informative. Focus on the current state: how many bids, price range, accepted contractor if any, and overall outlook.
+
+Project: ${input.name}
+Location: ${input.location}
+Budget: ${budgetStr} | Target: ${dateStr}${input.description ? `\nDescription: ${input.description}` : ""}
+
+Bids (${input.bids.length} total):
+${bidsStr}
+
+Respond with ONLY the summary text. No JSON, no labels, no preamble. 2-3 sentences maximum.`;
+};
+
+export async function summarizeProject(
+  input: ProjectSummaryInput
+): Promise<string> {
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 256,
+    messages: [{ role: "user", content: PROJECT_SUMMARY_PROMPT(input) }],
+  });
+
+  const text = response.content
+    .filter((b) => b.type === "text")
+    .map((b) => (b as { type: "text"; text: string }).text)
+    .join("")
+    .trim();
+
+  if (!text) throw new Error("Empty summary response");
+  return text;
+}
+
+// ── Bid Analysis ──────────────────────────────────────────────────────────────
+
 export async function analyzeBids(
   bids: BidPromptInput[],
   projectDescription: string

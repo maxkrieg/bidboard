@@ -133,6 +133,13 @@ export interface BidAnalysisRecord {
   created_at: string;
 }
 
+export interface ProjectSummaryRecord {
+  id: string;
+  project_id: string;
+  summary: string;
+  updated_at: string;
+}
+
 export interface Comment {
   id: string;
   bid_id: string;

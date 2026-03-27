@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logActivity } from "@/lib/activity";
+import { logActivity, triggerProjectSummary } from "@/lib/activity";
 import type { ActionResult, Bid, BidStatus, BidWithMeta } from "@/types";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -270,6 +270,7 @@ export async function createBid(
     });
   } catch {}
 
+  triggerProjectSummary(projectId);
   return { success: true, data: { id: bid.id } };
 }
 
@@ -441,6 +442,7 @@ export async function updateBid(
     });
   } catch {}
 
+  triggerProjectSummary(projectId);
   return { success: true, data: { id: bidId } };
 }
 
@@ -490,6 +492,7 @@ export async function deleteBid(bidId: string): Promise<void> {
     });
   } catch {}
 
+  triggerProjectSummary(projectId);
   redirect(`/projects/${projectId}`);
 }
 
@@ -545,6 +548,8 @@ export async function updateBidStatus(
       new_status: status,
     });
   } catch {}
+
+  triggerProjectSummary(projectId);
 
   if (status === "accepted") {
     const { data: others } = await supabase

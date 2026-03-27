@@ -492,6 +492,35 @@ export type Database = {
           },
         ]
       }
+      project_summaries: {
+        Row: {
+          id: string
+          project_id: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          summary: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_summaries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string

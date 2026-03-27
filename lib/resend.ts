@@ -12,7 +12,8 @@ export async function sendInviteEmail(
 ): Promise<void> {
   const inviteUrl = `${appUrl}/invite?token=${token}`;
   try {
-    await resend.emails.send({
+    console.log("[resend] sendInviteEmail to:", to, "inviteUrl:", inviteUrl);
+    const result = await resend.emails.send({
       from,
       to,
       subject: `${inviterName} invited you to collaborate on "${projectName}"`,
@@ -24,6 +25,7 @@ export async function sendInviteEmail(
         <p>If you weren't expecting this invitation, you can ignore this email.</p>
       `,
     });
+    console.log("[resend] sendInviteEmail result:", result);
   } catch (err) {
     console.error("[resend] sendInviteEmail error:", err);
   }

@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
+import { triggerProjectSummary } from "@/lib/activity";
 import type { ActionResult, BidRating } from "@/types";
 
 const RatingSchema = z.object({
@@ -54,5 +55,6 @@ export async function upsertBidRating(
     return { success: false, error: "Failed to save rating." };
   }
 
+  triggerProjectSummary(bid.project_id);
   return { success: true, data: data as BidRating };
 }
