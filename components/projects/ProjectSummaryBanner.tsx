@@ -8,6 +8,7 @@ import type { ProjectSummaryRecord } from "@/types";
 interface ProjectSummaryBannerProps {
   projectId: string;
   initialSummary: ProjectSummaryRecord | null;
+  bidCount: number;
 }
 
 function formatRelativeDate(isoString: string): string {
@@ -24,6 +25,7 @@ function formatRelativeDate(isoString: string): string {
 export function ProjectSummaryBanner({
   projectId,
   initialSummary,
+  bidCount,
 }: ProjectSummaryBannerProps) {
   const [summary, setSummary] = useState(initialSummary);
 
@@ -48,6 +50,20 @@ export function ProjectSummaryBanner({
       supabase.removeChannel(channel);
     };
   }, [projectId]);
+
+  if (bidCount === 0) {
+    return (
+      <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3 mb-6">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Sparkles size={14} className="text-zinc-400" />
+          <span className="text-xs font-medium text-zinc-500">AI Summary</span>
+        </div>
+        <p className="text-sm text-zinc-400">
+          Summary will appear once you add your first bid.
+        </p>
+      </div>
+    );
+  }
 
   if (!summary) {
     return (

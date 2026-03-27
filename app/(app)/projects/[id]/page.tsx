@@ -127,6 +127,7 @@ export default async function ProjectPage({
       <ProjectSummaryBanner
         projectId={id}
         initialSummary={(projectSummary as ProjectSummaryRecord | null) ?? null}
+        bidCount={result.data.bid_count}
       />
 
       <ProjectTabs
