@@ -13,13 +13,23 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const supabase = await createServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const internalSecret = request.headers.get("x-internal-secret");
+  const isInternal =
+    internalSecret && internalSecret === process.env.INTERNAL_API_SECRET;
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const admin = createAdminClient();
+  let userId: string | null = null;
+
+  if (!isInternal) {
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    userId = user.id;
   }
 
   let body: unknown;
@@ -36,10 +46,41 @@ export async function POST(request: Request) {
 
   const { project_id } = parsed.data;
 
-  // Verify membership: owner or accepted collaborator
-  const { data: project } = await supabase
+  // For user requests, verify membership
+  if (!isInternal && userId) {
+    const supabase = await createServerClient();
+    const { data: projectForAuth } = await supabase
+      .from("projects")
+      .select("owner_id")
+      .eq("id", project_id)
+      .single();
+
+    if (!projectForAuth) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    const isMember =
+      projectForAuth.owner_id === userId ||
+      (await (async () => {
+        const { data } = await supabase
+          .from("project_collaborators")
+          .select("id")
+          .eq("project_id", project_id)
+          .eq("user_id", userId!)
+          .eq("status", "accepted")
+          .maybeSingle();
+        return !!data;
+      })());
+
+    if (!isMember) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
+  // Fetch project (admin client works for both paths)
+  const { data: project } = await admin
     .from("projects")
-    .select("id, name, description, location, owner_id")
+    .select("id, name, description, location, owner_id, criteria")
     .eq("id", project_id)
     .single();
 
@@ -47,25 +88,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  const isMember =
-    project.owner_id === user.id ||
-    (await (async () => {
-      const { data } = await supabase
-        .from("project_collaborators")
-        .select("id")
-        .eq("project_id", project_id)
-        .eq("user_id", user.id)
-        .eq("status", "accepted")
-        .maybeSingle();
-      return !!data;
-    })());
-
-  if (!isMember) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   // Fetch bids with contractor + line items
-  const { data: bids, error: bidsError } = await supabase
+  const { data: bids, error: bidsError } = await admin
     .from("bids")
     .select("*, contractor:contractors(*), line_items:bid_line_items(*)")
     .eq("project_id", project_id);
@@ -103,7 +127,7 @@ export async function POST(request: Request) {
 
   let analysis: Awaited<ReturnType<typeof analyzeBids>>;
   try {
-    analysis = await analyzeBids(promptInputs, projectDescription);
+    analysis = await analyzeBids(promptInputs, projectDescription, project.criteria ?? null);
   } catch {
     return NextResponse.json(
       { error: "AI analysis failed. Please try again." },
@@ -112,7 +136,6 @@ export async function POST(request: Request) {
   }
 
   // Upsert via admin client to bypass RLS complexity
-  const admin = createAdminClient();
   const { data: record, error: upsertError } = await admin
     .from("bid_analyses")
     .upsert(
@@ -133,27 +156,29 @@ export async function POST(request: Request) {
     );
   }
 
-  // Fire analysis_ready notification + log activity — best-effort, non-blocking
-  try {
-    const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    await fetch(`${appUrl}/api/notifications`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
-      },
-      body: JSON.stringify({
-        type: "analysis_ready",
-        project_id,
-        triggered_by: user.id,
-      }),
-    }).catch(() => {});
+  // Fire analysis_ready notification + log activity — user-triggered only, best-effort
+  if (!isInternal && userId) {
+    try {
+      const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+      await fetch(`${appUrl}/api/notifications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+        },
+        body: JSON.stringify({
+          type: "analysis_ready",
+          project_id,
+          triggered_by: userId,
+        }),
+      }).catch(() => {});
 
-    await logActivity(project_id, user.id, "analysis_completed", {
-      bid_count: bids.length,
-    });
-  } catch (e) {
-    console.error("[analyze-bids] notification/activity failed", e);
+      await logActivity(project_id, userId, "analysis_completed", {
+        bid_count: bids.length,
+      });
+    } catch (e) {
+      console.error("[analyze-bids] notification/activity failed", e);
+    }
   }
 
   return NextResponse.json(record);

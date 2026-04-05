@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { ProjectTabs } from "@/components/projects/ProjectTabs";
 import { ArchiveDropdown } from "@/components/projects/ArchiveDropdown";
 import { ProjectSummaryBanner } from "@/components/projects/ProjectSummaryBanner";
+import { NotesDrawer } from "@/components/notes/NotesDrawer";
 import Link from "next/link";
 import { ChevronLeft, Pencil, MapPin, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -110,18 +111,37 @@ export default async function ProjectPage({
               {result.data.description}
             </p>
           )}
+          {result.data.criteria && (
+            <div className="mt-2">
+              <p className="text-xs font-medium text-zinc-400 mb-0.5">Criteria</p>
+              <p className="text-sm text-zinc-500 line-clamp-3 max-w-prose">
+                {result.data.criteria}
+              </p>
+            </div>
+          )}
         </div>
-        {isOwner && (
-          <div className="flex items-center gap-2">
-            <Link href={`/projects/${id}/edit`}>
-              <Button variant="outline" size="sm">
-                <Pencil size={13} className="mr-1.5" />
-                Edit
-              </Button>
-            </Link>
-            <ArchiveDropdown projectId={id} />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <NotesDrawer
+            projectId={id}
+            projectName={result.data.name}
+            bids={result.data.bids.map((b) => ({
+              id: b.id,
+              contractorName: b.contractor.name,
+            }))}
+            defaultScope="project"
+          />
+          {isOwner && (
+            <>
+              <Link href={`/projects/${id}/edit`}>
+                <Button variant="outline" size="sm">
+                  <Pencil size={13} className="mr-1.5" />
+                  Edit
+                </Button>
+              </Link>
+              <ArchiveDropdown projectId={id} />
+            </>
+          )}
+        </div>
       </div>
 
       <ProjectSummaryBanner

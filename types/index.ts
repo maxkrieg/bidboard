@@ -11,6 +11,7 @@ export interface Project {
   owner_id: string;
   name: string;
   description: string | null;
+  criteria: string | null;
   location: string;
   target_budget: number | null;
   target_date: string | null;
@@ -137,6 +138,15 @@ export interface ProjectSummaryRecord {
   id: string;
   project_id: string;
   summary: string;
+  updated_at: string;
+}
+
+export interface UserNote {
+  id: string;
+  user_id: string;
+  project_id: string;
+  bid_id: string | null;
+  body: string;
   updated_at: string;
 }
 

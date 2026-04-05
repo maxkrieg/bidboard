@@ -63,6 +63,21 @@ export function ProjectForm({ project, action }: ProjectFormProps) {
         />
       </div>
 
+      <div className="space-y-1.5">
+        <Label htmlFor="criteria">Criteria</Label>
+        <textarea
+          id="criteria"
+          name="criteria"
+          rows={3}
+          placeholder="e.g. Must use brand X materials, cleanup service required, licensed in CA…"
+          defaultValue={project?.criteria ?? undefined}
+          className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-indigo-600 min-h-[80px] transition-shadow duration-150"
+        />
+        <p className="text-xs text-zinc-400">
+          Must-haves and preferences used by AI to evaluate bids.
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="target_budget">Target Budget</Label>

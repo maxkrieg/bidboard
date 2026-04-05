@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
-import { triggerProjectSummary } from "@/lib/activity";
+import { triggerProjectSummary, triggerBidAnalysis } from "@/lib/activity";
 import type { ActionResult, Project, ProjectWithMeta } from "@/types";
 
 // ---- Zod Schemas ----
@@ -11,6 +11,7 @@ import type { ActionResult, Project, ProjectWithMeta } from "@/types";
 const CreateProjectSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   description: z.string().max(1000).optional(),
+  criteria: z.string().max(2000).optional(),
   location: z.string().min(1, "Location is required").max(200),
   target_budget: z.preprocess(
     (val) =>
@@ -39,6 +40,7 @@ export async function createProject(
   const parsed = CreateProjectSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") || undefined,
+    criteria: formData.get("criteria") || undefined,
     location: formData.get("location"),
     target_budget: formData.get("target_budget"),
     target_date: formData.get("target_date"),
@@ -54,6 +56,7 @@ export async function createProject(
       owner_id: user.id,
       name: parsed.data.name,
       description: parsed.data.description ?? null,
+      criteria: parsed.data.criteria ?? null,
       location: parsed.data.location,
       target_budget: parsed.data.target_budget ?? null,
       target_date: parsed.data.target_date || null,
@@ -94,6 +97,7 @@ export async function updateProject(
   const parsed = CreateProjectSchema.safeParse({
     name: formData.get("name"),
     description: formData.get("description") || undefined,
+    criteria: formData.get("criteria") || undefined,
     location: formData.get("location"),
     target_budget: formData.get("target_budget"),
     target_date: formData.get("target_date"),
@@ -108,6 +112,7 @@ export async function updateProject(
     .update({
       name: parsed.data.name,
       description: parsed.data.description ?? null,
+      criteria: parsed.data.criteria ?? null,
       location: parsed.data.location,
       target_budget: parsed.data.target_budget ?? null,
       target_date: parsed.data.target_date || null,
@@ -122,6 +127,7 @@ export async function updateProject(
   }
 
   triggerProjectSummary(projectId);
+  triggerBidAnalysis(projectId);
   redirect(`/projects/${projectId}`);
 }
 

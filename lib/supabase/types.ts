@@ -524,6 +524,7 @@ export type Database = {
       projects: {
         Row: {
           created_at: string
+          criteria: string | null
           description: string | null
           id: string
           location: string
@@ -535,6 +536,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          criteria?: string | null
           description?: string | null
           id?: string
           location: string
@@ -546,6 +548,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          criteria?: string | null
           description?: string | null
           id?: string
           location?: string
@@ -556,6 +559,48 @@ export type Database = {
           target_date?: string | null
         }
         Relationships: []
+      }
+      user_notes: {
+        Row: {
+          bid_id: string | null
+          body: string
+          id: string
+          project_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bid_id?: string | null
+          body?: string
+          id?: string
+          project_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bid_id?: string | null
+          body?: string
+          id?: string
+          project_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_notes_bid_id_fkey"
+            columns: ["bid_id"]
+            isOneToOne: false
+            referencedRelation: "bids"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_notes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

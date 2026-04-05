@@ -11,6 +11,7 @@ import { BidRating } from "@/components/bids/BidRating";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { DeleteBidButton } from "@/components/bids/DeleteBidButton";
 import { CommentsPanel } from "@/components/comments/CommentsPanel";
+import { NotesDrawer } from "@/components/notes/NotesDrawer";
 import { Button } from "@/components/ui/button";
 import type { CommentWithAuthor, BidRatingWithUser } from "@/types";
 
@@ -45,10 +46,21 @@ export default async function BidDetailPage({
 
   const { data: project } = await supabase
     .from("projects")
-    .select("owner_id")
+    .select("owner_id, name")
     .eq("id", id)
     .single();
   const isOwner = project?.owner_id === user?.id;
+
+  // Sibling bids for the notes drawer nav
+  const { data: projectBids } = await supabase
+    .from("bids")
+    .select("id, contractor:contractors(name)")
+    .eq("project_id", bid.project_id);
+
+  const bidsForNav = (projectBids ?? []).map((b) => ({
+    id: b.id,
+    contractorName: (b.contractor as { name: string }).name,
+  }));
 
   return (
     <div>
@@ -75,6 +87,12 @@ export default async function BidDetailPage({
           </p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          <NotesDrawer
+            projectId={bid.project_id}
+            projectName={project?.name ?? "Project"}
+            bids={bidsForNav}
+            defaultScope={bidId}
+          />
           <Link href={`/projects/${id}/bids/${bidId}/edit`}>
             <Button variant="outline" size="sm">
               <Pencil size={13} className="mr-1.5" />

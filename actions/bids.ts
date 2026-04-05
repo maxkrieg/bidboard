@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { logActivity, triggerProjectSummary } from "@/lib/activity";
+import { logActivity, triggerProjectSummary, triggerBidAnalysis } from "@/lib/activity";
 import type { ActionResult, Bid, BidStatus, BidWithMeta } from "@/types";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -271,6 +271,7 @@ export async function createBid(
   } catch {}
 
   triggerProjectSummary(projectId);
+  triggerBidAnalysis(projectId);
   return { success: true, data: { id: bid.id } };
 }
 
@@ -443,6 +444,7 @@ export async function updateBid(
   } catch {}
 
   triggerProjectSummary(projectId);
+  triggerBidAnalysis(projectId);
   return { success: true, data: { id: bidId } };
 }
 

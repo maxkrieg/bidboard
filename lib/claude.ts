@@ -24,10 +24,11 @@ export interface BidPromptInput {
 // Updated: 2026-03-18 — initial prompt
 export const ANALYZE_BIDS_PROMPT = (
   bids: BidPromptInput[],
-  projectDescription: string
+  projectDescription: string,
+  criteria: string | null
 ) => `You are an expert home improvement advisor helping homeowners evaluate contractor bids.
 
-Project: ${projectDescription}
+Project: ${projectDescription}${criteria ? `\n\nHomeowner Criteria (must-haves and preferences):\n${criteria}` : ""}
 
 Here are the bids submitted for this project:
 
@@ -64,17 +65,18 @@ Please analyze these bids and respond ONLY with a valid JSON object matching thi
 }
 
 Scoring guidelines (score field, integer 1–5):
-- 5: Exceptional overall value — competitive price, complete scope, strong track record, minimal concerns
-- 4: Strong bid with minor gaps or slightly higher price offset by quality signals
-- 3: Acceptable bid with notable trade-offs that need discussion
-- 2: Below average — missing scope, overpriced, or multiple red flags
-- 1: Seriously deficient — major concerns, incomplete, or not recommended
+- 5: Exceptional — competitive price, complete scope, meets all stated criteria, minimal concerns
+- 4: Strong bid — meets most criteria, minor gaps or slightly higher price
+- 3: Acceptable — meets some criteria, notable trade-offs
+- 2: Below average — missing scope, doesn't meet key criteria, or multiple red flags
+- 1: Seriously deficient — fails criteria, major concerns, incomplete
 Return the bids array sorted from highest score to lowest.
 
 Guidelines:
 - Red flags should be specific and actionable (e.g. "No mention of permit costs" not "Missing items")
+- Flag as a red flag any criterion that a bid clearly does not meet
+- Highlights should note genuinely positive aspects including criteria that are explicitly addressed
 - Questions should help the homeowner clarify scope gaps or ambiguities in this specific bid
-- Highlights should note genuinely positive aspects — do not manufacture praise
 - If a bid is clearly incomplete, note that in red flags
 - Keep all strings concise — 1-2 sentences max per item
 - Include an entry for every bid in the bids array
@@ -174,6 +176,7 @@ export interface ProjectSummaryInput {
   name: string;
   location: string;
   description: string | null;
+  criteria: string | null;
   target_budget: number | null;
   target_date: string | null;
   bids: Array<{
@@ -205,11 +208,11 @@ const PROJECT_SUMMARY_PROMPT = (input: ProjectSummaryInput): string => {
           )
           .join("\n");
 
-  return `You are a project status advisor for a home improvement app. Write a 2-3 sentence plain-English status summary for this project. Be direct and informative. Focus on the current state: how many bids, price range, accepted contractor if any, and overall outlook.
+  return `You are a project status advisor for a home improvement app. Write a 2-3 sentence plain-English status summary for this project. Be direct and informative. Focus on the current state: how many bids, price range, accepted contractor if any, whether bids appear to meet the project criteria, and overall outlook.
 
 Project: ${input.name}
 Location: ${input.location}
-Budget: ${budgetStr} | Target: ${dateStr}${input.description ? `\nDescription: ${input.description}` : ""}
+Budget: ${budgetStr} | Target: ${dateStr}${input.description ? `\nDescription: ${input.description}` : ""}${input.criteria ? `\nCriteria: ${input.criteria}` : ""}
 
 Bids (${input.bids.length} total):
 ${bidsStr}
@@ -240,7 +243,8 @@ export async function summarizeProject(
 
 export async function analyzeBids(
   bids: BidPromptInput[],
-  projectDescription: string
+  projectDescription: string,
+  criteria: string | null
 ): Promise<BidAnalysis> {
   const response = await anthropic.messages.create({
     model: "claude-sonnet-4-20250514",
@@ -248,7 +252,7 @@ export async function analyzeBids(
     messages: [
       {
         role: "user",
-        content: ANALYZE_BIDS_PROMPT(bids, projectDescription),
+        content: ANALYZE_BIDS_PROMPT(bids, projectDescription, criteria),
       },
     ],
   });

@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   const { data: project } = await admin
     .from("projects")
-    .select("name, location, description, target_budget, target_date")
+    .select("name, location, description, criteria, target_budget, target_date")
     .eq("id", project_id)
     .single();
 
@@ -43,6 +43,7 @@ export async function POST(request: Request) {
     name: project.name,
     location: project.location,
     description: project.description,
+    criteria: project.criteria,
     target_budget: project.target_budget,
     target_date: project.target_date,
     bids: (bids ?? []).map((b) => {
