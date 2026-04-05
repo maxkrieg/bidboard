@@ -5,10 +5,6 @@ interface MessageItemProps {
   isOwn: boolean;
 }
 
-function getDisplayName(name: string | null, email: string): string {
-  return name ?? email.split("@")[0];
-}
-
 function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString("en-US", {
     hour: "numeric",
@@ -17,10 +13,8 @@ function formatTime(iso: string): string {
 }
 
 export function MessageItem({ message, isOwn }: MessageItemProps) {
-  const displayName = getDisplayName(
-    message.author.full_name,
-    message.author.email
-  );
+  const displayName = message.author?.email ?? message.author_id
+  
 
   return (
     <div className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>

@@ -143,6 +143,7 @@ export async function POST(request: Request) {
         project_id,
         summary: analysis.summary,
         analysis: analysis.bids as unknown as Json,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: "project_id" }
     )

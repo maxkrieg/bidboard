@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { Sparkles, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Sparkles, Loader2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnalysisBidSection } from "./AnalysisBidSection";
+import { createClient } from "@/lib/supabase/client";
 import type { BidWithMeta, BidAnalysisRecord } from "@/types";
 
 interface AnalysisPanelProps {
@@ -27,7 +28,7 @@ function formatRelativeDate(dateStr: string): string {
 }
 
 function isStale(analysis: BidAnalysisRecord, bids: BidWithMeta[]): boolean {
-  const analysisDate = new Date(analysis.created_at);
+  const analysisDate = new Date(analysis.updated_at);
   return bids.some((bid) => new Date(bid.created_at) > analysisDate);
 }
 
@@ -41,6 +42,28 @@ export function AnalysisPanel({
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`bid-analysis-${projectId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bid_analyses",
+          filter: `project_id=eq.${projectId}`,
+        },
+        (payload) => {
+          setAnalysis(payload.new as BidAnalysisRecord);
+        }
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [projectId]);
 
   const canRun = bids.length >= 2;
   const stale = analysis ? isStale(analysis, bids) : false;
@@ -121,16 +144,8 @@ export function AnalysisPanel({
         <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
           <AlertTriangle size={14} className="shrink-0" />
           <span>
-            Bids have changed since this analysis. Re-run for updated results.
+            Bids have changed since this analysis — updating automatically.
           </span>
-          <Button
-            size="sm"
-            variant="outline"
-            className="ml-auto border-amber-300 text-amber-800 hover:bg-amber-100 h-7 px-2 text-xs"
-            onClick={runAnalysis}
-          >
-            Re-run
-          </Button>
         </div>
       )}
 
@@ -163,21 +178,10 @@ export function AnalysisPanel({
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
+        <div className="pt-3 border-t border-zinc-100">
           <span className="text-xs text-zinc-400">
-            Last run {formatRelativeDate(analysis.created_at)}
+            Updated {formatRelativeDate(analysis.updated_at)}
           </span>
-          {error && <p className="text-xs text-red-600">{error}</p>}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={runAnalysis}
-            disabled={loading}
-            className="gap-1.5 h-7 px-2 text-xs"
-          >
-            <RefreshCw size={12} />
-            Re-run Analysis
-          </Button>
         </div>
       </div>
     </div>

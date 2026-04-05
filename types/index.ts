@@ -132,6 +132,7 @@ export interface BidAnalysisRecord {
   summary: string;
   analysis: BidAnalysisBid[];
   created_at: string;
+  updated_at: string;
 }
 
 export interface ProjectSummaryRecord {

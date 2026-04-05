@@ -91,14 +91,14 @@ export function CommentItem({
     <div className={`flex gap-2.5 ${isReply ? "ml-8" : ""}`}>
       {/* Avatar */}
       <div className="w-7 h-7 rounded-full bg-indigo-100 text-indigo-700 text-xs font-semibold flex items-center justify-center shrink-0">
-        {getInitials(comment.author.full_name, comment.author.email)}
+        {getInitials(comment.author?.full_name ?? null, comment.author?.email ?? comment.author_id)}
       </div>
 
       <div className="flex-1 min-w-0">
         {/* Header */}
         <div className="flex items-baseline gap-2 mb-0.5">
           <span className="text-xs font-semibold text-zinc-800">
-            {getDisplayName(comment.author.full_name, comment.author.email)}
+            {getDisplayName(comment.author?.full_name ?? null, comment.author?.email ?? comment.author_id)}
           </span>
           <span
             className="text-xs text-zinc-400"

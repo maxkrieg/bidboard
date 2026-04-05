@@ -26,7 +26,7 @@ export function MessagesTab({
   // Populate author cache from initial messages
   useEffect(() => {
     for (const m of initialMessages) {
-      authorCache.current[m.author_id] = m.author;
+      if (m.author) authorCache.current[m.author_id] = m.author;
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

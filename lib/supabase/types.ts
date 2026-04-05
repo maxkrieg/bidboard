@@ -63,6 +63,7 @@ export type Database = {
           id: string
           project_id: string
           summary: string
+          updated_at: string
         }
         Insert: {
           analysis: Json
@@ -70,6 +71,7 @@ export type Database = {
           id?: string
           project_id: string
           summary: string
+          updated_at?: string | null
         }
         Update: {
           analysis?: Json
@@ -77,6 +79,7 @@ export type Database = {
           id?: string
           project_id?: string
           summary?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
