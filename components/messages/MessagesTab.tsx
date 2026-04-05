@@ -23,12 +23,23 @@ export function MessagesTab({
   const authorCache = useRef<Record<string, AuthorProfile>>({});
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  // Populate author cache from initial messages
+  // Fetch current messages on mount (handles remount when switching tabs)
   useEffect(() => {
-    for (const m of initialMessages) {
-      if (m.author) authorCache.current[m.author_id] = m.author;
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    const supabase = createClient();
+    supabase
+      .from("messages")
+      .select("*, author:users(full_name, avatar_url, email)")
+      .eq("project_id", projectId)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          setMessages(data as MessageWithAuthor[]);
+          for (const m of data as MessageWithAuthor[]) {
+            if (m.author) authorCache.current[m.author_id] = m.author;
+          }
+        }
+      });
+  }, [projectId]);
 
   // Scroll to bottom on mount and when messages change
   useEffect(() => {
