@@ -10,6 +10,9 @@ const DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json";
 interface PlaceSearchResult {
   place_id: string;
   name: string;
+  formatted_address?: string;
+  rating?: number;
+  user_ratings_total?: number;
 }
 
 interface PlaceDetailsResult {
@@ -63,6 +66,43 @@ export async function searchContractorPlace(
   } catch (err) {
     console.error("[google-places] searchContractorPlace error", err);
     return null;
+  }
+}
+
+/**
+ * Search Google Places and return up to 5 candidates without applying a confidence
+ * filter — used by the Google Business Confirmation Modal so the user can pick the
+ * right match themselves.
+ */
+export async function searchContractorCandidates(
+  query: string,
+  location: string
+): Promise<import("@/types").GooglePlaceCandidate[]> {
+  if (!API_KEY) return [];
+
+  try {
+    const searchQuery = location ? `${query} ${location}` : query;
+    const url = `${TEXT_SEARCH_URL}?query=${encodeURIComponent(searchQuery)}&key=${API_KEY}`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+
+    const json = (await res.json()) as {
+      status: string;
+      results: PlaceSearchResult[];
+    };
+
+    if (json.status !== "OK" || !json.results.length) return [];
+
+    return json.results.slice(0, 5).map((r) => ({
+      place_id: r.place_id,
+      name: r.name,
+      address: r.formatted_address ?? null,
+      rating: r.rating ?? null,
+      reviewCount: r.user_ratings_total ?? null,
+    }));
+  } catch (err) {
+    console.error("[google-places] searchContractorCandidates error", err);
+    return [];
   }
 }
 

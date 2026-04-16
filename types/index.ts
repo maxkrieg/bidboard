@@ -178,6 +178,14 @@ export interface MessageWithAuthor extends Message {
   author: { full_name: string | null; avatar_url: string | null; email: string };
 }
 
+export interface GooglePlaceCandidate {
+  place_id: string;
+  name: string;
+  address: string | null;
+  rating: number | null;
+  reviewCount: number | null;
+}
+
 export type BidExtractionResult = {
   contractor: {
     name: string | null

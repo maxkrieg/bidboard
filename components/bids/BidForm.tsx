@@ -11,6 +11,7 @@ import { BidDocuments } from "./BidDocuments";
 import { DocumentUploadZone } from "./DocumentUploadZone";
 import { AutoFillIndicator } from "./AutoFillIndicator";
 import { createBid, updateBid } from "@/actions/bids";
+import { GoogleBusinessConfirmationModal } from "./GoogleBusinessConfirmationModal";
 import type { BidWithMeta, ActionResult, BidExtractionResult } from "@/types";
 
 type PreviousContractor = {
@@ -44,10 +45,14 @@ export function BidForm({ projectId, projectLocation, bid, previousContractors }
     ? updateBid.bind(null, bid.id)
     : createBid.bind(null, projectId);
 
+  type BidActionData = { id: string; contractorId: string; contractorName: string; hasGoogleData: boolean };
+
   const [state, formAction, isPending] = useActionState<
-    ActionResult<{ id: string }> | null,
+    ActionResult<BidActionData> | null,
     FormData
   >(action, null);
+
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
 
   const [fieldValues, setFieldValues] = useState({
     contractor_name: bid?.contractor.name ?? "",
@@ -79,14 +84,17 @@ export function BidForm({ projectId, projectLocation, bid, previousContractors }
     })) ?? []
   );
 
-  // Redirect on success
+  // On success: for new bids without Google data, show the confirmation modal.
+  // Otherwise redirect immediately.
   useEffect(() => {
-    if (state?.success) {
-      if (isEdit) {
-        router.push(`/projects/${projectId}/bids/${bid.id}`);
-      } else {
-        router.push(`/projects/${projectId}/bids/${state.data.id}`);
-      }
+    if (!state?.success) return;
+    if (isEdit || state.data.hasGoogleData) {
+      const path = isEdit
+        ? `/projects/${projectId}/bids/${bid.id}`
+        : `/projects/${projectId}/bids/${state.data.id}`;
+      router.push(path);
+    } else {
+      setShowGoogleModal(true);
     }
   }, [state, isEdit, projectId, bid?.id, router]);
 
@@ -183,6 +191,7 @@ export function BidForm({ projectId, projectLocation, bid, previousContractors }
   const mismatch = Math.abs(lineItemsSubtotal - totalPrice) > 0.01;
 
   return (
+    <>
     <form action={formAction} className="space-y-8 max-w-2xl">
       {/* Hidden serialized line items */}
       <input
@@ -466,5 +475,18 @@ export function BidForm({ projectId, projectLocation, bid, previousContractors }
         </Button>
       </div>
     </form>
+
+    {showGoogleModal && state?.success && (
+      <GoogleBusinessConfirmationModal
+        contractorId={state.data.contractorId}
+        contractorName={state.data.contractorName}
+        projectLocation={projectLocation}
+        onDone={() => {
+          setShowGoogleModal(false);
+          router.push(`/projects/${projectId}/bids/${state.data.id}`);
+        }}
+      />
+    )}
+    </>
   );
 }

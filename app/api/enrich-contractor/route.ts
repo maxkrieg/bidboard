@@ -42,20 +42,24 @@ async function runEnrichment(contractorId: string, projectLocation: string) {
   };
 
   // ── Google Places ──────────────────────────────────────────────────────────
-  try {
-    const placeId = await searchContractorPlace(typedContractor.name, projectLocation);
-    if (placeId) {
-      update.google_place_id = placeId;
-      const details = await getPlaceDetails(placeId);
-      if (details) {
-        if (details.address) update.address = details.address;
-        if (details.rating !== null) update.google_rating = details.rating;
-        if (details.reviewCount !== null) update.google_review_count = details.reviewCount;
-        if (details.website && !typedContractor.website) update.website = details.website;
+  // Skip if the user already confirmed a business via the confirmation modal.
+  // This prevents auto-enrichment from overwriting their explicit choice.
+  if (!typedContractor.google_place_id) {
+    try {
+      const placeId = await searchContractorPlace(typedContractor.name, projectLocation);
+      if (placeId) {
+        update.google_place_id = placeId;
+        const details = await getPlaceDetails(placeId);
+        if (details) {
+          if (details.address) update.address = details.address;
+          if (details.rating !== null) update.google_rating = details.rating;
+          if (details.reviewCount !== null) update.google_review_count = details.reviewCount;
+          if (details.website && !typedContractor.website) update.website = details.website;
+        }
       }
+    } catch (err) {
+      console.error("[enrich-contractor] google places error", err);
     }
-  } catch (err) {
-    console.error("[enrich-contractor] google places error", err);
   }
 
   // ── BBB ────────────────────────────────────────────────────────────────────

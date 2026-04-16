@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logActivity, triggerProjectSummary, triggerBidAnalysis } from "@/lib/activity";
+import { getPlaceDetails } from "@/lib/google-places";
 import type { ActionResult, Bid, BidStatus, BidWithMeta } from "@/types";
 
 // ── Zod Schemas ──────────────────────────────────────────────────────────────
@@ -76,9 +77,9 @@ async function getBidProjectId(
 
 export async function createBid(
   projectId: string,
-  _prevState: ActionResult<{ id: string }> | null,
+  _prevState: ActionResult<{ id: string; contractorId: string; contractorName: string; hasGoogleData: boolean }> | null,
   formData: FormData
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; contractorId: string; contractorName: string; hasGoogleData: boolean }>> {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -128,14 +129,16 @@ export async function createBid(
   // Upsert contractor by normalized name
   const { data: existingContractor } = await supabase
     .from("contractors")
-    .select("id")
+    .select("id, google_place_id")
     .ilike("name", contractorData.name)
     .maybeSingle();
 
   let contractorId: string;
+  let hasGoogleData: boolean;
 
   if (existingContractor) {
     contractorId = existingContractor.id;
+    hasGoogleData = !!existingContractor.google_place_id;
   } else {
     // Insert via admin client (anon role cannot insert contractors)
     const admin = createAdminClient();
@@ -156,6 +159,7 @@ export async function createBid(
       return { success: false, error: "Failed to save contractor." };
     }
     contractorId = newContractor.id;
+    hasGoogleData = false;
   }
 
   // Insert bid
@@ -213,25 +217,8 @@ export async function createBid(
     }
   }
 
-  // Fire enrichment — best-effort, non-blocking
-  // Consider just defined as function in this file rather than self-referencing API route
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-    await fetch(`${baseUrl}/api/enrich-contractor`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
-      },
-      body: JSON.stringify({
-        contractorId,
-        projectLocation: project?.location ?? "",
-      }),
-    }).catch(() => {});
-  } catch (e) {
-    // non-blocking
-    console.error("[createBid] enrichment fetch failed", e);
-  }
+  // Enrichment for new bids is deferred — the client shows the Google Business
+  // Confirmation Modal and fires enrichment after the user confirms or skips.
 
   // Fire bid_added notification — best-effort, non-blocking
   try {
@@ -272,16 +259,24 @@ export async function createBid(
 
   triggerProjectSummary(projectId);
   triggerBidAnalysis(projectId);
-  return { success: true, data: { id: bid.id } };
+  return {
+    success: true,
+    data: {
+      id: bid.id,
+      contractorId,
+      contractorName: contractorData.name,
+      hasGoogleData,
+    },
+  };
 }
 
 // ── updateBid ─────────────────────────────────────────────────────────────────
 
 export async function updateBid(
   bidId: string,
-  _prevState: ActionResult<{ id: string }> | null,
+  _prevState: ActionResult<{ id: string; contractorId: string; contractorName: string; hasGoogleData: boolean }> | null,
   formData: FormData
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; contractorId: string; contractorName: string; hasGoogleData: boolean }>> {
   const supabase = await createServerClient();
   const {
     data: { user },
@@ -332,16 +327,18 @@ export async function updateBid(
   const { contractor: contractorData, line_items, ...bidData } = parsed.data;
 
   // Get or create contractor
-  const { data: existingContractor } = await supabase
+  const { data: existingContractorForUpdate } = await supabase
     .from("contractors")
-    .select("id")
+    .select("id, google_place_id")
     .ilike("name", contractorData.name)
     .maybeSingle();
 
   let contractorId: string;
+  let hasGoogleData: boolean;
 
-  if (existingContractor) {
-    contractorId = existingContractor.id;
+  if (existingContractorForUpdate) {
+    contractorId = existingContractorForUpdate.id;
+    hasGoogleData = !!existingContractorForUpdate.google_place_id;
   } else {
     const admin = createAdminClient();
     const { data: newContractor, error: contractorError } = await admin
@@ -360,6 +357,7 @@ export async function updateBid(
       return { success: false, error: "Failed to save contractor." };
     }
     contractorId = newContractor.id;
+    hasGoogleData = false;
   }
 
   // Update bid
@@ -445,7 +443,15 @@ export async function updateBid(
 
   triggerProjectSummary(projectId);
   triggerBidAnalysis(projectId);
-  return { success: true, data: { id: bidId } };
+  return {
+    success: true,
+    data: {
+      id: bidId,
+      contractorId,
+      contractorName: contractorData.name,
+      hasGoogleData,
+    },
+  };
 }
 
 // ── deleteBid ─────────────────────────────────────────────────────────────────
@@ -731,4 +737,85 @@ export async function getBidById(
     success: true,
     data: data as unknown as BidWithMeta,
   };
+}
+
+// ── Google Business Confirmation ───────────────────────────────────────────────
+
+function fireEnrichment(contractorId: string, projectLocation: string): void {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  fetch(`${baseUrl}/api/enrich-contractor`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-internal-secret": process.env.INTERNAL_API_SECRET ?? "",
+    },
+    body: JSON.stringify({ contractorId, projectLocation }),
+  }).catch(() => {});
+}
+
+export async function confirmGoogleBusiness(
+  contractorId: string,
+  placeId: string,
+  projectLocation: string
+): Promise<ActionResult<null>> {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  try {
+    const admin = createAdminClient();
+
+    const { data: contractor } = await admin
+      .from("contractors")
+      .select("website, phone")
+      .eq("id", contractorId)
+      .single();
+
+    const details = await getPlaceDetails(placeId);
+
+    const update: Record<string, unknown> = { google_place_id: placeId };
+    if (details) {
+      if (details.address) update.address = details.address;
+      if (details.rating !== null) update.google_rating = details.rating;
+      if (details.reviewCount !== null) update.google_review_count = details.reviewCount;
+      if (details.website && !contractor?.website) update.website = details.website;
+      if (details.phone && !contractor?.phone) update.phone = details.phone;
+    }
+
+    const { error } = await admin
+      .from("contractors")
+      .update(update)
+      .eq("id", contractorId);
+
+    if (error) {
+      console.error("[confirmGoogleBusiness] update error", error);
+      return { success: false, error: "Failed to save Google business data." };
+    }
+
+    // Trigger remaining enrichment (BBB + license). Google step will be skipped
+    // since google_place_id is now set.
+    fireEnrichment(contractorId, projectLocation);
+
+    return { success: true, data: null };
+  } catch (err) {
+    console.error("[confirmGoogleBusiness] error", err);
+    return { success: false, error: "Failed to confirm business." };
+  }
+}
+
+export async function skipGoogleConfirmation(
+  contractorId: string,
+  projectLocation: string
+): Promise<ActionResult<null>> {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: "Unauthorized" };
+
+  // Run full enrichment including Google auto-search.
+  fireEnrichment(contractorId, projectLocation);
+  return { success: true, data: null };
 }
