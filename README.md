@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏠 BidBoard
 
-## Getting Started
+A collaborative web app for homeowners to collect, compare, and analyze contractor bids for home improvement projects. Invite collaborators, discuss bids in real time, and leverage AI-powered analysis to make confident decisions.
 
-First, run the development server:
+## ✨ Features
+
+- 📋 **Project management** — Create projects for home improvement jobs and invite collaborators
+- 💰 **Bid tracking** — Add contractor bids with line items and supporting documents
+- 🔍 **Contractor enrichment** — Automatically pulls Google ratings, reviews, and business info for each contractor
+- 🤖 **AI analysis** — Claude-powered comparison that surfaces red flags, highlights, and clarifying questions across all bids
+- 💬 **Real-time collaboration** — Comment on bids and message project members with live updates via Supabase Realtime
+- 🔔 **Invites & notifications** — Invite collaborators by email; get notified when bids, comments, or messages are added
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js (App Router) with TypeScript
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Database / Auth / Realtime / Storage:** Supabase
+- **AI:** Anthropic Claude API
+- **Contractor data:** Google Places API + Firecrawl
+- **Email:** Resend
+- **Deployment:** Vercel
+
+## 🚀 Getting Started
 
 ```bash
+# Install dependencies
+npm install
+
+# Copy environment variables and fill in values
+cp .env.local.example .env.local
+
+# Run the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔑 Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See `.env.local.example` for the full list of required variables. Key ones:
 
-## Learn More
+| Variable | Description |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) |
+| `ANTHROPIC_API_KEY` | Anthropic API key for AI analysis |
+| `GOOGLE_PLACES_API_KEY` | Google Places API key for contractor enrichment |
+| `FIRECRAWL_API_KEY` | Firecrawl API key for contractor website scraping |
+| `RESEND_API_KEY` | Resend API key for transactional email |
+| `NEXT_PUBLIC_SITE_URL` | Fully-qualified production URL (e.g. `https://bidboard.vercel.app`) |
 
-To learn more about Next.js, take a look at the following resources:
+### 🗄️ Database
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+# Apply migrations
+npx supabase db push
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Regenerate TypeScript types after schema changes
+npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/supabase/types.ts
+```
 
-## Deploy on Vercel
+## ☁️ Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy to Vercel. Set `NEXT_PUBLIC_SITE_URL` to your production URL in the Vercel dashboard under Project → Settings → Environment Variables — all email links and internal API calls depend on it being a fully-qualified URL.
