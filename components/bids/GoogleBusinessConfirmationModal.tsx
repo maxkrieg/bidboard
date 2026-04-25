@@ -179,11 +179,7 @@ export function GoogleBusinessConfirmationModal({
 
   return (
     <Dialog open>
-      <DialogContent
-        className="max-w-lg"
-        onInteractOutside={(e) => e.preventDefault()}
-        onEscapeKeyDown={(e) => e.preventDefault()}
-      >
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Confirm Google Business</DialogTitle>
           <DialogDescription>
