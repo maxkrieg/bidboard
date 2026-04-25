@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { searchContractorPlace, getPlaceDetails } from "@/lib/google-places";
-import { scrapeBBB, scrapeLicense } from "@/lib/firecrawl";
-import { getLicenseUrl } from "@/lib/license-states";
 import type { Contractor } from "@/types";
 
 const BodySchema = z.object({
@@ -42,45 +40,24 @@ async function runEnrichment(contractorId: string, projectLocation: string) {
   };
 
   // ── Google Places ──────────────────────────────────────────────────────────
-  try {
-    const placeId = await searchContractorPlace(typedContractor.name, projectLocation);
-    if (placeId) {
-      update.google_place_id = placeId;
-      const details = await getPlaceDetails(placeId);
-      if (details) {
-        if (details.address) update.address = details.address;
-        if (details.rating !== null) update.google_rating = details.rating;
-        if (details.reviewCount !== null) update.google_review_count = details.reviewCount;
-        if (details.website && !typedContractor.website) update.website = details.website;
+  // Skip if the user already confirmed a business via the confirmation modal.
+  // This prevents auto-enrichment from overwriting their explicit choice.
+  if (!typedContractor.google_place_id) {
+    try {
+      const placeId = await searchContractorPlace(typedContractor.name, projectLocation);
+      if (placeId) {
+        update.google_place_id = placeId;
+        const details = await getPlaceDetails(placeId);
+        if (details) {
+          if (details.address) update.address = details.address;
+          if (details.rating !== null) update.google_rating = details.rating;
+          if (details.reviewCount !== null) update.google_review_count = details.reviewCount;
+          if (details.website && !typedContractor.website) update.website = details.website;
+        }
       }
+    } catch (err) {
+      console.error("[enrich-contractor] google places error", err);
     }
-  } catch (err) {
-    console.error("[enrich-contractor] google places error", err);
-  }
-
-  // ── BBB ────────────────────────────────────────────────────────────────────
-  try {
-    const bbb = await scrapeBBB(typedContractor.name, projectLocation);
-    if (bbb) {
-      update.bbb_rating = bbb.rating;
-      update.bbb_accredited = bbb.accredited;
-    }
-  } catch (err) {
-    console.error("[enrich-contractor] bbb error", err);
-  }
-
-  // ── License ────────────────────────────────────────────────────────────────
-  try {
-    const licenseUrl = getLicenseUrl(projectLocation, typedContractor.name);
-    if (licenseUrl) {
-      const license = await scrapeLicense(licenseUrl);
-      if (license) {
-        update.license_number = license.licenseNumber;
-        update.license_status = license.licenseStatus;
-      }
-    }
-  } catch (err) {
-    console.error("[enrich-contractor] license error", err);
   }
 
   // ── Persist ────────────────────────────────────────────────────────────────

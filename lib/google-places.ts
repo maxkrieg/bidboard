@@ -1,15 +1,21 @@
 /**
  * Google Places API helpers for contractor enrichment.
  * All functions are best-effort and return null on any failure.
+ *
+ * Search uses the Places API (New) text search endpoint, which matches
+ * Google Maps ranking. Details still use the legacy Details endpoint.
  */
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY ?? "";
-const TEXT_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json";
+const NEW_TEXT_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText";
 const DETAILS_URL = "https://maps.googleapis.com/maps/api/place/details/json";
 
-interface PlaceSearchResult {
-  place_id: string;
-  name: string;
+interface NewPlaceResult {
+  id: string;
+  displayName: { text: string };
+  formattedAddress?: string;
+  rating?: number;
+  userRatingCount?: number;
 }
 
 interface PlaceDetailsResult {
@@ -18,6 +24,28 @@ interface PlaceDetailsResult {
   website: string | null;
   rating: number | null;
   reviewCount: number | null;
+}
+
+async function newTextSearch(textQuery: string, maxResultCount = 5): Promise<NewPlaceResult[]> {
+  if (!API_KEY) return [];
+  console.log("[google-places] newTextSearch query", textQuery);
+
+  const res = await fetch(NEW_TEXT_SEARCH_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": API_KEY,
+      "X-Goog-FieldMask":
+        "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount",
+    },
+    body: JSON.stringify({ textQuery, maxResultCount }),
+  });
+  console.log("[google-places] newTextSearch response status", res);
+  if (!res.ok) return [];
+
+  const json = (await res.json()) as { places?: NewPlaceResult[] };
+  console.log("[google-places] newTextSearch results", json.places);
+  return json.places ?? [];
 }
 
 /**
@@ -44,25 +72,44 @@ export async function searchContractorPlace(
   if (!API_KEY) return null;
 
   try {
-    const query = `${name} ${location}`;
-    const url = `${TEXT_SEARCH_URL}?query=${encodeURIComponent(query)}&key=${API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
+    const places = await newTextSearch(`${name} ${location}`, 5);
+    if (!places.length) return null;
 
-    const json = (await res.json()) as {
-      status: string;
-      results: PlaceSearchResult[];
-    };
+    const first = places[0];
+    if (!isConfidentMatch(name, first.displayName.text)) return null;
 
-    if (json.status !== "OK" || !json.results.length) return null;
-
-    const first = json.results[0];
-    if (!isConfidentMatch(name, first.name)) return null;
-
-    return first.place_id;
+    return first.id;
   } catch (err) {
     console.error("[google-places] searchContractorPlace error", err);
     return null;
+  }
+}
+
+/**
+ * Search Google Places and return up to 5 candidates without applying a confidence
+ * filter — used by the Google Business Confirmation Modal so the user can pick the
+ * right match themselves.
+ */
+export async function searchContractorCandidates(
+  query: string,
+  location: string
+): Promise<import("@/types").GooglePlaceCandidate[]> {
+  if (!API_KEY) return [];
+
+  try {
+    const textQuery = location ? `${query} ${location}` : query;
+    const places = await newTextSearch(textQuery, 5);
+
+    return places.map((p) => ({
+      place_id: p.id,
+      name: p.displayName.text,
+      address: p.formattedAddress ?? null,
+      rating: p.rating ?? null,
+      reviewCount: p.userRatingCount ?? null,
+    }));
+  } catch (err) {
+    console.error("[google-places] searchContractorCandidates error", err);
+    return [];
   }
 }
 
