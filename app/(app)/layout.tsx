@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { UserMenu } from "@/components/shared/UserMenu";
 import type { Notification } from "@/types";
@@ -15,6 +16,19 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
+
+  // Gate access based on approval status (admin always bypasses)
+  const isAdmin = user.email === process.env.ADMIN_EMAIL;
+  if (!isAdmin) {
+    const adminClient = createAdminClient();
+    const { data: profile } = await adminClient
+      .from("users")
+      .select("status")
+      .eq("id", user.id)
+      .single();
+    if (profile?.status === "pending") redirect("/pending");
+    if (profile?.status === "rejected") redirect("/rejected");
+  }
 
   const initial = user.email?.[0]?.toUpperCase() ?? "U";
 
@@ -36,7 +50,7 @@ export default async function AppLayout({
             href="/dashboard"
             className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
           >
-            <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
               <span className="text-white text-xs font-bold tracking-tight">
                 BB
               </span>
@@ -49,7 +63,7 @@ export default async function AppLayout({
               initialUnreadCount={unreadCount}
               initialNotifications={typedNotifications}
             />
-            <UserMenu email={user.email ?? ""} initial={initial} />
+            <UserMenu email={user.email ?? ""} initial={initial} isAdmin={isAdmin} />
           </div>
         </div>
       </header>

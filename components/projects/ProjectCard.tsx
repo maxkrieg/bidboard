@@ -19,13 +19,14 @@ interface ProjectCardProps {
 export function ProjectCard({ project, isOwner = true }: ProjectCardProps) {
   return (
     <Link href={`/projects/${project.id}`}>
-      <Card className={`border border-zinc-200 border-l-2 ${isOwner ? "border-l-indigo-500" : "border-l-zinc-300"} bg-white shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer h-full`}>
-        <CardHeader className="pb-2">
+      <Card className="relative overflow-hidden border border-zinc-200 bg-white shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer h-full">
+        <div className={`absolute inset-x-0 top-0 h-[3px] ${isOwner ? "bg-indigo-500" : "bg-zinc-300"}`} />
+        <CardHeader className="pb-2 pt-5">
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-base font-semibold text-zinc-900 leading-tight">
+            <CardTitle className="text-[15px] font-semibold text-zinc-900 leading-tight">
               {project.name}
             </CardTitle>
-            <Badge className="shrink-0 text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-50 border-0">
+            <Badge className="shrink-0 text-xs bg-indigo-600 text-white hover:bg-indigo-600 border-0 font-medium tabular-nums">
               {project.bid_count} {project.bid_count === 1 ? "bid" : "bids"}
             </Badge>
           </div>

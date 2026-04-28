@@ -35,7 +35,7 @@ export function ArchiveDropdown({ projectId }: ArchiveDropdownProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className={cn(buttonVariants({ variant: "outline", size: "icon" }))}
+        className={cn(buttonVariants({ variant: "outline", size: "default" }), "w-10 px-0")}
         disabled={isPending}
       >
         <MoreHorizontal className="size-4" />

@@ -31,11 +31,11 @@ export function DeleteBidButton({ bidId }: DeleteBidButtonProps) {
     <>
       <Button
         variant="outline"
-        size="sm"
+        size="default"
         className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
         onClick={() => setOpen(true)}
       >
-        <Trash2 size={13} className="mr-1.5" />
+        <Trash2 size={15} className="mr-1.5" />
         Delete
       </Button>
 

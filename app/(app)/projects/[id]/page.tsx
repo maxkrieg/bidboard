@@ -74,74 +74,84 @@ export default async function ProjectPage({
     <div>
       <Link
         href="/dashboard"
-        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-600 mb-5 transition-colors"
       >
         <ChevronLeft size={14} />
         Dashboard
       </Link>
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">
-            {result.data.name}
-          </h1>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5 text-sm text-zinc-500">
-            <span className="flex items-center gap-1">
-              <MapPin size={13} className="text-zinc-400" />
-              {result.data.location}
-            </span>
-            {result.data.target_budget && (
-              <span className="flex items-center gap-1">
-                <DollarSign size={13} className="text-zinc-400" />
-                {formatCurrency(result.data.target_budget)} budget
+
+      {/* Project header card */}
+      <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] px-6 py-5 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[26px] font-bold text-zinc-900 tracking-tight leading-tight">
+              {result.data.name}
+            </h1>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                <MapPin size={11} />
+                {result.data.location}
               </span>
-            )}
-            {result.data.target_date && (
-              <span className="flex items-center gap-1">
-                <Calendar size={13} className="text-zinc-400" />
-                {new Date(result.data.target_date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
+              {result.data.target_budget && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                  <DollarSign size={11} />
+                  {formatCurrency(result.data.target_budget)} budget
+                </span>
+              )}
+              {result.data.target_date && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600">
+                  <Calendar size={11} />
+                  {new Date(result.data.target_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0 pt-0.5">
+            <NotesDrawer
+              projectId={id}
+              projectName={result.data.name}
+              bids={result.data.bids.map((b) => ({
+                id: b.id,
+                contractorName: b.contractor.name,
+              }))}
+              defaultScope="project"
+            />
+            {isOwner && (
+              <>
+                <Link href={`/projects/${id}/edit`}>
+                  <Button variant="outline" size="default">
+                    <Pencil size={14} className="mr-1.5" />
+                    Edit
+                  </Button>
+                </Link>
+                <ArchiveDropdown projectId={id} />
+              </>
             )}
           </div>
-          {result.data.description && (
-            <p className="mt-2 text-sm text-zinc-500 line-clamp-3 max-w-prose">
-              {result.data.description}
-            </p>
-          )}
-          {result.data.criteria && (
-            <div className="mt-2">
-              <p className="text-xs font-medium text-zinc-400 mb-0.5">Criteria</p>
-              <p className="text-sm text-zinc-500 line-clamp-3 max-w-prose">
-                {result.data.criteria}
+        </div>
+
+        {(result.data.description || result.data.criteria) && (
+          <div className="mt-4 pt-4 border-t border-zinc-100 space-y-2.5">
+            {result.data.description && (
+              <p className="text-sm text-zinc-500 line-clamp-3 max-w-prose leading-relaxed">
+                {result.data.description}
               </p>
-            </div>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <NotesDrawer
-            projectId={id}
-            projectName={result.data.name}
-            bids={result.data.bids.map((b) => ({
-              id: b.id,
-              contractorName: b.contractor.name,
-            }))}
-            defaultScope="project"
-          />
-          {isOwner && (
-            <>
-              <Link href={`/projects/${id}/edit`}>
-                <Button variant="outline" size="sm">
-                  <Pencil size={13} className="mr-1.5" />
-                  Edit
-                </Button>
-              </Link>
-              <ArchiveDropdown projectId={id} />
-            </>
-          )}
-        </div>
+            )}
+            {result.data.criteria && (
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Criteria</p>
+                <p className="text-sm text-zinc-500 line-clamp-3 max-w-prose leading-relaxed">
+                  {result.data.criteria}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <ProjectSummaryBanner

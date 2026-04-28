@@ -255,3 +255,16 @@ export interface Notification {
   read: boolean;
   created_at: string;
 }
+
+export type UserAccessStatus = "pending" | "approved" | "rejected";
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  status: UserAccessStatus;
+  notification_sent: boolean;
+  created_at: string;
+}
+

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,14 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/actions/auth";
-import { LogOut } from "lucide-react";
+import { LogOut, ShieldCheck } from "lucide-react";
 
 interface UserMenuProps {
   email: string;
   initial: string;
+  isAdmin?: boolean;
 }
 
-export function UserMenu({ email, initial }: UserMenuProps) {
+export function UserMenu({ email, initial, isAdmin }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger>
@@ -32,6 +34,17 @@ export function UserMenu({ email, initial }: UserMenuProps) {
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        {isAdmin && (
+          <DropdownMenuItem className="p-0">
+            <Link
+              href="/admin"
+              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm text-zinc-700"
+            >
+              <ShieldCheck size={14} />
+              Admin Panel
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem className="p-0">
           <form action={signOut} className="w-full">
             <button

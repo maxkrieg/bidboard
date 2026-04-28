@@ -94,8 +94,8 @@ export function NotesDrawer({
 
   return (
     <>
-      <Button variant="outline" size="sm" onClick={handleOpen}>
-        <NotebookPen size={13} className="mr-1.5" />
+      <Button variant="outline" size="default" onClick={handleOpen}>
+        <NotebookPen size={15} className="mr-1.5" />
         Notes
       </Button>
 
@@ -103,12 +103,12 @@ export function NotesDrawer({
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/20 z-40"
+            className="fixed inset-0 bg-black/20 z-40 animate-in fade-in duration-200"
             onClick={() => setIsOpen(false)}
           />
 
           {/* Panel */}
-          <div className="fixed inset-y-0 right-0 w-[800px] max-w-full bg-white shadow-xl z-50 flex flex-col">
+          <div className="fixed inset-y-0 right-0 w-[800px] max-w-full bg-white shadow-xl z-50 flex flex-col animate-in slide-in-from-right duration-300 ease-out">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200 shrink-0">
               <div className="flex items-center gap-2">

@@ -53,10 +53,10 @@ export function ProjectSummaryBanner({
 
   if (bidCount === 0) {
     return (
-      <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3 mb-6">
+      <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4 mb-6">
         <div className="flex items-center gap-2 mb-1.5">
-          <Sparkles size={14} className="text-zinc-400" />
-          <span className="text-xs font-medium text-zinc-500">AI Summary</span>
+          <Sparkles size={13} className="text-zinc-300" />
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">AI Summary</span>
         </div>
         <p className="text-sm text-zinc-400">
           Summary will appear once you add your first bid.
@@ -67,25 +67,30 @@ export function ProjectSummaryBanner({
 
   if (!summary) {
     return (
-      <div className="rounded-lg border border-zinc-100 bg-zinc-50 px-4 py-3 mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Sparkles size={14} className="text-indigo-400" />
-          <span className="text-xs font-medium text-indigo-600">AI Summary</span>
+      <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 px-5 py-4 mb-6">
+        <div className="flex items-center gap-2 mb-2.5">
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100">
+            <Sparkles size={11} className="text-indigo-400" />
+          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">AI Summary</span>
         </div>
-        <div className="space-y-1.5 animate-pulse">
-          <div className="h-3 bg-zinc-200 rounded w-full" />
-          <div className="h-3 bg-zinc-200 rounded w-4/5" />
+        <div className="space-y-2 animate-pulse">
+          <div className="h-2.5 bg-indigo-100 rounded-full w-full" />
+          <div className="h-2.5 bg-indigo-100 rounded-full w-4/5" />
+          <div className="h-2.5 bg-indigo-100 rounded-full w-3/5" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border border-indigo-100 bg-indigo-50/40 px-4 py-3 mb-6">
-      <div className="flex items-center justify-between mb-1.5">
+    <div className="rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50/70 to-transparent px-5 py-4 mb-6">
+      <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <Sparkles size={14} className="text-indigo-400" />
-          <span className="text-xs font-medium text-indigo-600">AI Summary</span>
+          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100">
+            <Sparkles size={11} className="text-indigo-500" />
+          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">AI Summary</span>
         </div>
         <span className="text-xs text-zinc-400">
           Updated {formatRelativeDate(summary.updated_at)}

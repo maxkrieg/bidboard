@@ -99,7 +99,7 @@ export function BidStatusActions({ bid, projectId, isOwner }: BidStatusActionsPr
               type="button"
               disabled={isPending || isActive}
               onClick={() => handleStatusChange(status)}
-              className={`px-3 py-1.5 rounded border text-sm font-medium transition-colors disabled:cursor-not-allowed ${
+              className={`px-4 py-2 rounded-lg border text-sm font-medium transition-colors disabled:cursor-not-allowed ${
                 isActive ? config.activeClass : config.inactiveClass
               } ${isActive ? "opacity-100" : "opacity-70 hover:opacity-100"}`}
             >

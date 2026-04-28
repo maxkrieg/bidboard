@@ -66,40 +66,46 @@ export default async function BidDetailPage({
     <div>
       <Link
         href={`/projects/${id}`}
-        className="inline-flex items-center gap-1 text-sm text-zinc-500 hover:text-zinc-700 mb-6"
+        className="inline-flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-600 mb-5 transition-colors"
       >
         <ChevronLeft size={14} />
         Back to project
       </Link>
 
-      <div className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900">
-            {bid.contractor.name}
-          </h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            Bid submitted{" "}
-            {new Date(bid.bid_date).toLocaleDateString("en-US", {
-              month: "long",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <NotesDrawer
-            projectId={bid.project_id}
-            projectName={project?.name ?? "Project"}
-            bids={bidsForNav}
-            defaultScope={bidId}
-          />
-          <Link href={`/projects/${id}/bids/${bidId}/edit`}>
-            <Button variant="outline" size="sm">
-              <Pencil size={13} className="mr-1.5" />
-              Edit
-            </Button>
-          </Link>
-          <DeleteBidButton bidId={bidId} />
+      {/* Bid header card */}
+      <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] px-6 py-5 mb-6">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-[26px] font-bold text-zinc-900 tracking-tight leading-tight">
+                {bid.contractor.name}
+              </h1>
+              <StatusBadge status={bid.status} />
+            </div>
+            <p className="text-sm text-zinc-400 mt-1.5">
+              Bid submitted{" "}
+              {new Date(bid.bid_date).toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 pt-0.5">
+            <NotesDrawer
+              projectId={bid.project_id}
+              projectName={project?.name ?? "Project"}
+              bids={bidsForNav}
+              defaultScope={bidId}
+            />
+            <Link href={`/projects/${id}/bids/${bidId}/edit`}>
+              <Button variant="outline" size="default">
+                <Pencil size={14} className="mr-1.5" />
+                Edit
+              </Button>
+            </Link>
+            <DeleteBidButton bidId={bidId} />
+          </div>
         </div>
       </div>
 
@@ -109,23 +115,20 @@ export default async function BidDetailPage({
           <ContractorCard contractor={bid.contractor} />
 
           {/* Bid summary */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-zinc-900">
-                Bid Summary
-              </h3>
-              <StatusBadge status={bid.status} />
-            </div>
-            <div className="mb-4">
-              <p className="text-zinc-400 text-xs mb-0.5">Total Price</p>
-              <p className="text-3xl font-bold text-zinc-900">
+          <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] p-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-4">
+              Bid Summary
+            </h3>
+            <div className="rounded-lg bg-zinc-50 px-4 py-3 mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Total Price</p>
+              <p className="text-3xl font-bold text-zinc-900 tabular-nums">
                 {formatCurrency(bid.total_price)}
               </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
               {bid.estimated_days && (
                 <div>
-                  <p className="text-zinc-400 text-xs mb-0.5">Duration</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Duration</p>
                   <p className="font-medium text-zinc-700">
                     {bid.estimated_days} days
                   </p>
@@ -133,7 +136,7 @@ export default async function BidDetailPage({
               )}
               {bid.expiry_date && (
                 <div>
-                  <p className="text-zinc-400 text-xs mb-0.5">Expires</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Expires</p>
                   <p className="font-medium text-zinc-700">
                     {new Date(bid.expiry_date).toLocaleDateString("en-US", {
                       month: "short",
@@ -146,8 +149,8 @@ export default async function BidDetailPage({
             </div>
             {bid.notes && (
               <div className="mt-4 pt-4 border-t border-zinc-100">
-                <p className="text-xs text-zinc-400 mb-1">Notes</p>
-                <p className="text-sm text-zinc-600 whitespace-pre-line">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1.5">Notes</p>
+                <p className="text-sm text-zinc-600 whitespace-pre-line leading-relaxed">
                   {bid.notes}
                 </p>
               </div>
@@ -155,8 +158,8 @@ export default async function BidDetailPage({
           </div>
 
           {/* Status actions */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="text-base font-semibold text-zinc-900 mb-3">
+          <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] p-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">
               Status
             </h3>
             <BidStatusActions bid={bid} projectId={id} isOwner={isOwner} />
@@ -171,8 +174,8 @@ export default async function BidDetailPage({
 
           {/* Line items */}
           {bid.line_items.length > 0 && (
-            <div className="rounded-lg border border-zinc-200 bg-white p-4">
-              <h3 className="text-base font-semibold text-zinc-900 mb-4">
+            <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] p-5">
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-4">
                 Line Items
               </h3>
               <LineItemsTable
@@ -188,8 +191,8 @@ export default async function BidDetailPage({
           )}
 
           {/* Documents */}
-          <div className="rounded-lg border border-zinc-200 bg-white p-4">
-            <h3 className="text-base font-semibold text-zinc-900 mb-4">
+          <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] p-5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-4">
               Documents
             </h3>
             <BidDocuments

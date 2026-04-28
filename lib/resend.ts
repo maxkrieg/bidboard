@@ -103,6 +103,46 @@ export async function sendMessageAddedEmail(
   }
 }
 
+export async function sendAccessRequestEmail(
+  adminEmail: string,
+  requesterEmail: string,
+  adminUrl: string
+): Promise<void> {
+  try {
+    await resend.emails.send({
+      from,
+      to: adminEmail,
+      subject: `New access request on BidBoard`,
+      html: `
+        <p>A new user has requested access to BidBoard.</p>
+        <p><strong>Email:</strong> ${requesterEmail}</p>
+        <p><a href="${adminUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Review in Admin Panel</a></p>
+      `,
+    });
+  } catch (err) {
+    console.error("[resend] sendAccessRequestEmail error:", err);
+  }
+}
+
+export async function sendAccessApprovedEmail(
+  to: string,
+  siteUrl: string
+): Promise<void> {
+  try {
+    await resend.emails.send({
+      from,
+      to,
+      subject: `Your BidBoard access has been approved`,
+      html: `
+        <p>Your access request has been approved. You can now sign in to BidBoard.</p>
+        <p><a href="${siteUrl}/login" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Sign in to BidBoard</a></p>
+      `,
+    });
+  } catch (err) {
+    console.error("[resend] sendAccessApprovedEmail error:", err);
+  }
+}
+
 export async function sendAnalysisReadyEmail(
   to: string[],
   projectName: string,

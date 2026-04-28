@@ -23,14 +23,14 @@ export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
         <div className="flex items-center gap-2">
           {bids.length >= 2 && (
             <Link href={`/projects/${projectId}/compare`}>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="default">
                 Compare Bids
               </Button>
             </Link>
           )}
           <Link href={`/projects/${projectId}/bids/new`}>
-            <Button size="sm">
-              <Plus size={14} className="mr-1.5" />
+            <Button size="default">
+              <Plus size={15} className="mr-1.5" />
               Add Bid
             </Button>
           </Link>

@@ -77,10 +77,11 @@ export function ContractorCard({ contractor: initial }: ContractorCardProps) {
     : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contractor.name)}`;
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4">
-      <h3 className="text-base font-semibold text-zinc-900 mb-3">
-        {contractor.name}
+    <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] p-5">
+      <h3 className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3">
+        Contractor
       </h3>
+      <p className="text-base font-semibold text-zinc-900 mb-3">{contractor.name}</p>
 
       <ul className="space-y-1.5 text-sm text-zinc-600">
         {contractor.phone && (

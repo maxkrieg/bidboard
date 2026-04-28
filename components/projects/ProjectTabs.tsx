@@ -35,34 +35,32 @@ export function ProjectTabs({
 }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="bids">
-      <div className="border-b border-zinc-200 mb-6">
-        <TabsList className="gap-0 p-0 h-auto rounded-none w-full justify-start bg-transparent">
+        <TabsList className="inline-flex bg-zinc-100 p-1 rounded-lg h-auto gap-0.5 mb-6">
           <TabsTrigger
             value="bids"
-            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+            className="rounded-md px-4 py-1.5 text-sm font-medium transition-all text-zinc-500 hover:text-zinc-700 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-zinc-900 data-[state=active]:font-semibold"
           >
             Bids
           </TabsTrigger>
           <TabsTrigger
             value="messages"
-            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+            className="rounded-md px-4 py-1.5 text-sm font-medium transition-all text-zinc-500 hover:text-zinc-700 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-zinc-900 data-[state=active]:font-semibold"
           >
             Messages
           </TabsTrigger>
           <TabsTrigger
             value="collaborators"
-            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+            className="rounded-md px-4 py-1.5 text-sm font-medium transition-all text-zinc-500 hover:text-zinc-700 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-zinc-900 data-[state=active]:font-semibold"
           >
             Collaborators
           </TabsTrigger>
           <TabsTrigger
             value="activity"
-            className="px-4 py-2.5 text-sm font-medium rounded-none text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-indigo-600 data-[state=active]:bg-transparent"
+            className="rounded-md px-4 py-1.5 text-sm font-medium transition-all text-zinc-500 hover:text-zinc-700 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-zinc-900 data-[state=active]:font-semibold"
           >
             Activity
           </TabsTrigger>
         </TabsList>
-      </div>
 
       <TabsContent value="bids" className="">
         <BidsTab

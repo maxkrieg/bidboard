@@ -21,10 +21,10 @@ function isExpiringSoon(expiry: string | null): boolean {
   return diff > 0 && diff < 7 * 24 * 60 * 60 * 1000;
 }
 
-function statusBorderClass(status: string): string {
-  if (status === "accepted") return "border-t-indigo-500";
-  if (status === "rejected") return "border-t-red-400";
-  return "border-t-amber-400";
+function statusAccentClass(status: string): string {
+  if (status === "accepted") return "bg-indigo-500";
+  if (status === "rejected") return "bg-red-400";
+  return "bg-amber-400";
 }
 
 export function BidCard({ bid }: BidCardProps) {
@@ -39,16 +39,17 @@ export function BidCard({ bid }: BidCardProps) {
   return (
     <Link href={`/projects/${bid.project_id}/bids/${bid.id}`}>
       <div
-        className={`rounded-lg border border-zinc-200 border-t-2 ${statusBorderClass(bid.status)} bg-white p-4 shadow-sm hover:border-zinc-300 hover:shadow-md transition-all duration-150 cursor-pointer`}
+        className="relative overflow-hidden rounded-lg border border-zinc-200 bg-white p-4 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
       >
+        <div className={`absolute inset-y-0 left-0 w-[3px] ${statusAccentClass(bid.status)}`} />
         <div className="flex items-start justify-between gap-2 mb-1">
-          <p className="text-xs text-zinc-500 leading-tight">
+          <p className="text-sm font-medium text-zinc-700 leading-tight">
             {bid.contractor.name}
           </p>
           <StatusBadge status={bid.status} />
         </div>
 
-        <p className="text-2xl font-bold text-zinc-900 mb-3">
+        <p className="text-2xl font-bold text-zinc-900 mb-3 mt-0.5">
           {formatCurrency(bid.total_price)}
         </p>
 

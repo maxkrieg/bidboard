@@ -4,7 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 
 const btnCls =
-  "inline-flex items-center justify-center rounded-md px-4 h-9 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors";
+  "inline-flex items-center justify-center rounded-md px-5 h-10 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm";
 
 export default async function DashboardPage() {
   const supabase = await createServerClient();
