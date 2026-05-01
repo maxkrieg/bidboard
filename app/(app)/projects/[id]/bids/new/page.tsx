@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { getProjectById } from "@/actions/projects";
@@ -29,6 +29,8 @@ export default async function NewBidPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  if (project.owner_id !== user?.id) redirect(`/projects/${id}`);
 
   const { data: ownedProjects } = await supabase
     .from("projects")

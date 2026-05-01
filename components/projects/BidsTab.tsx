@@ -9,9 +9,10 @@ interface BidsTabProps {
   projectId: string;
   bids: BidWithMeta[];
   initialAnalysis: BidAnalysisRecord | null;
+  isOwner: boolean;
 }
 
-export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
+export function BidsTab({ projectId, bids, initialAnalysis, isOwner }: BidsTabProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -28,12 +29,14 @@ export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
               </Button>
             </Link>
           )}
-          <Link href={`/projects/${projectId}/bids/new`}>
-            <Button size="default">
-              <Plus size={15} className="mr-1.5" />
-              Add Bid
-            </Button>
-          </Link>
+          {isOwner && (
+            <Link href={`/projects/${projectId}/bids/new`}>
+              <Button size="default">
+                <Plus size={15} className="mr-1.5" />
+                Add Bid
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -42,14 +45,18 @@ export function BidsTab({ projectId, bids, initialAnalysis }: BidsTabProps) {
           <FileText size={40} className="text-zinc-300 mb-4" />
           <p className="text-zinc-600 font-medium mb-1">No bids yet</p>
           <p className="text-zinc-400 text-sm mb-4">
-            Add your first bid to start comparing contractors.
+            {isOwner
+              ? "Add your first bid to start comparing contractors."
+              : "No bids have been added yet."}
           </p>
-          <Link href={`/projects/${projectId}/bids/new`}>
-            <Button>
-              <Plus size={14} className="mr-1.5" />
-              Add your first bid
-            </Button>
-          </Link>
+          {isOwner && (
+            <Link href={`/projects/${projectId}/bids/new`}>
+              <Button>
+                <Plus size={14} className="mr-1.5" />
+                Add your first bid
+              </Button>
+            </Link>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

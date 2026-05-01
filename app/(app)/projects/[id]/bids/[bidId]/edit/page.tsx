@@ -1,8 +1,9 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { getBidById } from "@/actions/bids";
 import { getProjectById } from "@/actions/projects";
+import { createServerClient } from "@/lib/supabase/server";
 import { BidForm } from "@/components/bids/BidForm";
 
 export default async function EditBidPage({
@@ -21,6 +22,10 @@ export default async function EditBidPage({
 
   const bid = bidResult.data;
   const project = projectResult.data;
+
+  const supabase = await createServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (project.owner_id !== user?.id) redirect(`/projects/${id}/bids/${bidId}`);
 
   return (
     <div>
