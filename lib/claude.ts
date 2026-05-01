@@ -3,6 +3,8 @@ import type { BidAnalysis, BidExtractionResult } from "@/types";
 
 export const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
+const MODEL = "claude-sonnet-4-6";
+
 interface BidLineItemInput {
   description: string;
   quantity: number;
@@ -145,7 +147,7 @@ export async function extractBidFromDocument(
     : { type: "image", source: { type: "base64", media_type: mediaType, data: fileBase64 } };
 
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: MODEL,
     max_tokens: 2048,
     messages: [
       {
@@ -224,7 +226,7 @@ export async function summarizeProject(
   input: ProjectSummaryInput
 ): Promise<string> {
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: MODEL,
     max_tokens: 256,
     messages: [{ role: "user", content: PROJECT_SUMMARY_PROMPT(input) }],
   });
@@ -247,7 +249,7 @@ export async function analyzeBids(
   criteria: string | null
 ): Promise<BidAnalysis> {
   const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: MODEL,
     max_tokens: 4096,
     messages: [
       {
