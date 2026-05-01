@@ -45,6 +45,21 @@ export function AnalysisPanel({
 
   useEffect(() => {
     const supabase = createClient();
+
+    // Restore analysis on remount if it exists in the DB but wasn't in the server render.
+    // This happens when the user runs an analysis then switches tabs — the component
+    // remounts with initialAnalysis=null but the record is already in the DB.
+    if (!analysis) {
+      supabase
+        .from("bid_analyses")
+        .select("*")
+        .eq("project_id", projectId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setAnalysis(data as unknown as BidAnalysisRecord);
+        });
+    }
+
     const channel = supabase
       .channel(`bid-analysis-${projectId}`)
       .on(
