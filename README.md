@@ -17,7 +17,7 @@ A collaborative web app for homeowners to collect, compare, and analyze contract
 - **Styling:** Tailwind CSS + shadcn/ui
 - **Database / Auth / Realtime / Storage:** Supabase
 - **AI:** Anthropic Claude API
-- **Contractor data:** Google Places API + Firecrawl
+- **Contractor data:** Google Places API
 - **Email:** Resend
 - **Deployment:** Vercel
 
@@ -47,7 +47,6 @@ See `.env.local.example` for the full list of required variables. Key ones:
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key (server only) |
 | `ANTHROPIC_API_KEY` | Anthropic API key for AI analysis |
 | `GOOGLE_PLACES_API_KEY` | Google Places API key for contractor enrichment |
-| `FIRECRAWL_API_KEY` | Firecrawl API key for contractor website scraping |
 | `RESEND_API_KEY` | Resend API key for transactional email |
 | `NEXT_PUBLIC_SITE_URL` | Fully-qualified production URL (e.g. `https://bidboard.vercel.app`) |
 
@@ -61,6 +60,35 @@ npx supabase db push
 npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/supabase/types.ts
 ```
 
+## 🔄 Development Workflow
+
+### Code changes (no schema changes)
+
+Develop locally, push to `main`, Vercel auto-deploys.
+
+### Schema changes (new migrations)
+
+1. Write the new migration file in `supabase/migrations/` (e.g. `0021_my_change.sql`) — never modify existing files
+2. Link to dev and test locally:
+   ```bash
+   npx supabase link --project-ref <DEV_PROJECT_REF>
+   npx supabase db push
+   ```
+3. Once happy, apply to prod before or alongside the code deploy:
+   ```bash
+   npx supabase link --project-ref <PROD_PROJECT_REF>
+   npx supabase db push
+   ```
+4. Regenerate types from prod and commit:
+   ```bash
+   npx supabase gen types typescript --project-id <PROD_PROJECT_REF> > lib/supabase/types.ts
+   ```
+5. Push to `main` — Vercel deploys automatically
+
+> **Tip:** Run `npx supabase status` to check which project your CLI is currently linked to before running `db push`.
+
 ## ☁️ Deployment
 
-Deploy to Vercel. Set `NEXT_PUBLIC_SITE_URL` to your production URL in the Vercel dashboard under Project → Settings → Environment Variables — all email links and internal API calls depend on it being a fully-qualified URL.
+Deployed to Vercel at `https://bidboard.maxkrieg.com`. See `docs/DEPLOYMENT.md` for the full production setup guide.
+
+Set `NEXT_PUBLIC_SITE_URL` to your production URL in the Vercel dashboard under Project → Settings → Environment Variables — all email links and internal API calls depend on it being a fully-qualified URL.

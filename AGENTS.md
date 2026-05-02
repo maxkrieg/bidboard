@@ -304,11 +304,38 @@ One bucket: **`bid-documents`** (private). Storage path convention: `{project_id
 
 ---
 
+## Dev Workflow
+
+### Code changes (no schema changes)
+Develop locally, push to `main`, Vercel auto-deploys. No extra steps.
+
+### Schema changes (new migrations)
+1. Add a new `supabase/migrations/00XX_*.sql` file — **never modify existing migration files**
+2. Link CLI to dev and push locally:
+   ```bash
+   npx supabase link --project-ref <DEV_PROJECT_REF>
+   npx supabase db push
+   ```
+3. Test against dev. When ready, apply to prod before or alongside the code deploy:
+   ```bash
+   npx supabase link --project-ref <PROD_PROJECT_REF>
+   npx supabase db push
+   ```
+4. Regenerate types from prod and commit:
+   ```bash
+   npx supabase gen types typescript --project-id <PROD_PROJECT_REF> > lib/supabase/types.ts
+   ```
+5. Push to `main` to trigger Vercel deploy
+
+Run `npx supabase status` to confirm which project the CLI is linked to before running `db push`.
+
+---
+
 ## Getting Started (for Agents)
 
 1. Read this file completely
-2. Check `/supabase/migrations/` to understand the current DB schema (migrations 0001–0005 are applied)
+2. Check `/supabase/migrations/` to understand the current DB schema (migrations 0001–0020 are applied to prod)
 3. Check `/types/index.ts` for shared app-level types
 4. Check `/actions/` to understand existing mutation patterns before adding new ones
-5. After any schema change: run `npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/supabase/types.ts`, or manually update `lib/supabase/types.ts` to match the new tables
-6. **Current phase: Phase 3 complete.** Phase 4 (contractor enrichment) is next.
+5. After any schema change: run `npx supabase gen types typescript --project-id <PROD_PROJECT_REF> > lib/supabase/types.ts` and commit the result
+6. **All phases complete (1–7).** Production is live at `https://bidboard.maxkrieg.com`
