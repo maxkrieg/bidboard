@@ -37,7 +37,7 @@ const BidSchema = z.object({
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-async function assertProjectMember(
+async function assertProjectOwner(
   supabase: Awaited<ReturnType<typeof createServerClient>>,
   projectId: string,
   userId: string
@@ -48,17 +48,7 @@ async function assertProjectMember(
     .eq("id", projectId)
     .single();
 
-  if (project?.owner_id === userId) return true;
-
-  const { data: collab } = await supabase
-    .from("project_collaborators")
-    .select("id")
-    .eq("project_id", projectId)
-    .eq("user_id", userId)
-    .eq("status", "accepted")
-    .single();
-
-  return !!collab;
+  return project?.owner_id === userId;
 }
 
 async function getBidProjectId(
@@ -86,8 +76,8 @@ export async function createBid(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) return { success: false, error: "Not authorized." };
+  const isOwner = await assertProjectOwner(supabase, projectId, user.id);
+  if (!isOwner) return { success: false, error: "Only the project owner can create bids." };
 
   // Fetch project location for contractor enrichment
   const { data: project } = await supabase
@@ -286,8 +276,8 @@ export async function updateBid(
   const projectId = await getBidProjectId(supabase, bidId);
   if (!projectId) return { success: false, error: "Bid not found." };
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) return { success: false, error: "Not authorized." };
+  const isOwner = await assertProjectOwner(supabase, projectId, user.id);
+  if (!isOwner) return { success: false, error: "Only the project owner can edit bids." };
 
   // Fetch project location for contractor enrichment
   const { data: project } = await supabase
@@ -466,8 +456,8 @@ export async function deleteBid(bidId: string): Promise<void> {
   const projectId = await getBidProjectId(supabase, bidId);
   if (!projectId) redirect("/dashboard");
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) redirect("/dashboard");
+  const isOwner = await assertProjectOwner(supabase, projectId, user.id);
+  if (!isOwner) redirect("/dashboard");
 
   // Fetch contractor name for activity log before deleting
   const { data: bidForLog } = await supabase
@@ -620,8 +610,8 @@ export async function uploadBidDocument(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) return { success: false, error: "Not authorized." };
+  const isOwner = await assertProjectOwner(supabase, projectId, user.id);
+  if (!isOwner) return { success: false, error: "Only the project owner can upload documents." };
 
   const file = formData.get("file") as File | null;
   if (!file) return { success: false, error: "No file provided." };
@@ -677,8 +667,8 @@ export async function deleteBidDocument(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const isMember = await assertProjectMember(supabase, projectId, user.id);
-  if (!isMember) return { success: false, error: "Not authorized." };
+  const isOwner = await assertProjectOwner(supabase, projectId, user.id);
+  if (!isOwner) return { success: false, error: "Only the project owner can delete documents." };
 
   const { data: doc } = await supabase
     .from("bid_documents")

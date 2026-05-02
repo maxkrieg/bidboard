@@ -67,6 +67,7 @@ export function ProjectTabs({
           projectId={project.id}
           bids={project.bids}
           initialAnalysis={initialAnalysis}
+          isOwner={isOwner}
         />
       </TabsContent>
 

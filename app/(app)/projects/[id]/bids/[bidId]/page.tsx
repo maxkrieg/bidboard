@@ -98,13 +98,17 @@ export default async function BidDetailPage({
               bids={bidsForNav}
               defaultScope={bidId}
             />
-            <Link href={`/projects/${id}/bids/${bidId}/edit`}>
-              <Button variant="outline" size="default">
-                <Pencil size={14} className="mr-1.5" />
-                Edit
-              </Button>
-            </Link>
-            <DeleteBidButton bidId={bidId} />
+            {isOwner && (
+              <>
+                <Link href={`/projects/${id}/bids/${bidId}/edit`}>
+                  <Button variant="outline" size="default">
+                    <Pencil size={14} className="mr-1.5" />
+                    Edit
+                  </Button>
+                </Link>
+                <DeleteBidButton bidId={bidId} />
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -199,6 +203,7 @@ export default async function BidDetailPage({
               bidId={bidId}
               projectId={id}
               documents={bid.documents}
+              isOwner={isOwner}
             />
           </div>
         </div>
