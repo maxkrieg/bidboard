@@ -451,6 +451,7 @@ export function BidForm({ projectId, projectLocation, bid, previousContractors }
               bidId={bid.id}
               projectId={projectId}
               documents={bid.documents}
+              isOwner={true}
             />
           </section>
         </>
