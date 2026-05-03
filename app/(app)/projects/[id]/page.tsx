@@ -138,14 +138,17 @@ export default async function ProjectPage({
         {(result.data.description || result.data.criteria) && (
           <div className="mt-4 pt-4 border-t border-zinc-100 space-y-2.5">
             {result.data.description && (
-              <p className="text-sm text-zinc-500 line-clamp-3 max-w-prose leading-relaxed">
-                {result.data.description}
-              </p>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Description</p>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {result.data.description}
+                </p>
+              </div>
             )}
             {result.data.criteria && (
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-1">Criteria</p>
-                <p className="text-sm text-zinc-500 line-clamp-3 max-w-prose leading-relaxed">
+                <p className="text-sm text-zinc-500 leading-relaxed">
                   {result.data.criteria}
                 </p>
               </div>
