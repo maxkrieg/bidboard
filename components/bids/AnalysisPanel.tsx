@@ -153,7 +153,7 @@ export function AnalysisPanel({
   const bidPriceMap = Object.fromEntries(bids.map((b) => [b.id, b.total_price]));
 
   return (
-    <div className="mt-8 border border-zinc-200 rounded-xl overflow-hidden">
+    <div className="mt-8 border border-indigo-100 bg-indigo-50/40 rounded-xl overflow-hidden">
       {/* Stale banner */}
       {stale && (
         <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border-b border-amber-200 text-amber-800 text-sm">
@@ -168,7 +168,7 @@ export function AnalysisPanel({
         {/* Header */}
         <div className="flex items-center gap-2 mb-4">
           <Sparkles size={16} className="text-indigo-500" />
-          <span className="text-sm font-semibold text-indigo-700">AI Summary</span>
+          <span className="text-sm font-semibold uppercase tracking-wider text-indigo-700">AI Bid Analysis</span>
         </div>
 
         {/* Summary */}

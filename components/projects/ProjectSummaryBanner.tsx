@@ -56,7 +56,7 @@ export function ProjectSummaryBanner({
       <div className="rounded-xl border border-zinc-200 bg-zinc-50 px-5 py-4 mb-6">
         <div className="flex items-center gap-2 mb-1.5">
           <Sparkles size={13} className="text-zinc-300" />
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">AI Summary</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">AI Project Status</span>
         </div>
         <p className="text-sm text-zinc-400">
           Summary will appear once you add your first bid.
@@ -72,7 +72,7 @@ export function ProjectSummaryBanner({
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100">
             <Sparkles size={11} className="text-indigo-400" />
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">AI Summary</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">AI Project Status</span>
         </div>
         <div className="space-y-2 animate-pulse">
           <div className="h-2.5 bg-indigo-100 rounded-full w-full" />
@@ -90,7 +90,7 @@ export function ProjectSummaryBanner({
           <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100">
             <Sparkles size={11} className="text-indigo-500" />
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">AI Summary</span>
+          <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-700">AI Project Status</span>
         </div>
         <span className="text-xs text-zinc-400">
           Updated {formatRelativeDate(summary.updated_at)}
