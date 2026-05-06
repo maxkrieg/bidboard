@@ -3,6 +3,11 @@ import { FolderOpen } from "lucide-react";
 import { createServerClient } from "@/lib/supabase/server";
 import { ProjectCard } from "@/components/projects/ProjectCard";
 
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+function getBannerUrl(storagePath: string) {
+  return `${SUPABASE_URL}/storage/v1/object/public/project-photos/${storagePath}`;
+}
+
 const btnCls =
   "inline-flex items-center justify-center rounded-md px-5 h-10 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm";
 
@@ -15,7 +20,7 @@ export default async function DashboardPage() {
 
   const { data: projects } = await supabase
     .from("projects")
-    .select("*, bids(id)")
+    .select("*, bids(id), banner_photo:project_photos!projects_banner_photo_id_fkey(storage_path)")
     .order("created_at", { ascending: false });
 
   const allProjects = projects ?? [];
@@ -59,6 +64,11 @@ export default async function DashboardPage() {
                   bid_count: project.bids?.length ?? 0,
                 }}
                 isOwner
+                bannerUrl={
+                  (project.banner_photo as { storage_path: string } | null)?.storage_path
+                    ? getBannerUrl((project.banner_photo as { storage_path: string }).storage_path)
+                    : undefined
+                }
               />
             ))}
           </div>
@@ -81,6 +91,11 @@ export default async function DashboardPage() {
                   bid_count: project.bids?.length ?? 0,
                 }}
                 isOwner={false}
+                bannerUrl={
+                  (project.banner_photo as { storage_path: string } | null)?.storage_path
+                    ? getBannerUrl((project.banner_photo as { storage_path: string }).storage_path)
+                    : undefined
+                }
               />
             ))}
           </div>

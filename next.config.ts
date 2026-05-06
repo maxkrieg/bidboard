@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '20mb',
+    },
+    middlewareClientMaxBodySize: '20mb',
+  },
   turbopack: {
     resolveAlias: {
       // pdfjs-dist bundles a NodeCanvasFactory that requires 'canvas' (Node-only).

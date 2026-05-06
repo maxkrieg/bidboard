@@ -23,12 +23,16 @@ export interface BidPromptInput {
   line_items: BidLineItemInput[];
 }
 
-// Updated: 2026-03-18 — initial prompt
 export const ANALYZE_BIDS_PROMPT = (
   bids: BidPromptInput[],
   projectDescription: string,
-  criteria: string | null
+  criteria: string | null,
+  today: string,
+  targetDate: string | null
 ) => `You are an expert home improvement advisor helping homeowners evaluate contractor bids.
+
+Today's date: ${today}
+Project target date: ${targetDate ?? "Not specified"}
 
 Project: ${projectDescription}${criteria ? `\n\nHomeowner Criteria (must-haves and preferences):\n${criteria}` : ""}
 
@@ -210,14 +214,18 @@ const PROJECT_SUMMARY_PROMPT = (input: ProjectSummaryInput): string => {
           )
           .join("\n");
 
+  const todayStr = new Date().toISOString().split("T")[0];
+
   return `You are a project status advisor for a home improvement app. Write a 2-3 sentence plain-English status summary for this project. Be direct and informative. Focus on the current state: how many bids, price range, accepted contractor if any, whether bids appear to meet the project criteria, and overall outlook.
 
+Today's date: ${todayStr}
 Project: ${input.name}
 Location: ${input.location}
 Budget: ${budgetStr} | Target: ${dateStr}${input.description ? `\nDescription: ${input.description}` : ""}${input.criteria ? `\nCriteria: ${input.criteria}` : ""}
 
 Bids (${input.bids.length} total):
 ${bidsStr}
+Note: bid status reflects the homeowner's decision — pending means no decision yet, accepted means the homeowner chose this contractor, rejected means the homeowner declined this bid.
 
 Respond with ONLY the summary text. No JSON, no labels, no preamble. 2-3 sentences maximum.`;
 };
@@ -246,15 +254,17 @@ export async function summarizeProject(
 export async function analyzeBids(
   bids: BidPromptInput[],
   projectDescription: string,
-  criteria: string | null
+  criteria: string | null,
+  targetDate: string | null
 ): Promise<BidAnalysis> {
+  const today = new Date().toISOString().split("T")[0];
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 4096,
     messages: [
       {
         role: "user",
-        content: ANALYZE_BIDS_PROMPT(bids, projectDescription, criteria),
+        content: ANALYZE_BIDS_PROMPT(bids, projectDescription, criteria, today, targetDate),
       },
     ],
   });

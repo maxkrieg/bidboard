@@ -14,13 +14,25 @@ interface ProjectCardProps {
     bid_count: number;
   };
   isOwner?: boolean;
+  bannerUrl?: string;
 }
 
-export function ProjectCard({ project, isOwner = true }: ProjectCardProps) {
+export function ProjectCard({ project, isOwner = true, bannerUrl }: ProjectCardProps) {
   return (
     <Link href={`/projects/${project.id}`}>
       <Card className="relative overflow-hidden border border-zinc-200 bg-white shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-elevated)] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer h-full">
-        <div className={`absolute inset-x-0 top-0 h-[3px] ${isOwner ? "bg-indigo-500" : "bg-zinc-300"}`} />
+        {bannerUrl ? (
+          <div className="relative h-28 overflow-hidden">
+            <img
+              src={bannerUrl}
+              alt={project.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 to-transparent" />
+          </div>
+        ) : (
+          <div className={`absolute inset-x-0 top-0 h-[3px] ${isOwner ? "bg-indigo-500" : "bg-zinc-300"}`} />
+        )}
         <CardHeader className="pb-2 pt-5">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="text-[15px] font-semibold text-zinc-900 leading-tight">

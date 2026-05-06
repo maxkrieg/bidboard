@@ -80,7 +80,7 @@ export async function POST(request: Request) {
   // Fetch project (admin client works for both paths)
   const { data: project } = await admin
     .from("projects")
-    .select("id, name, description, location, owner_id, criteria")
+    .select("id, name, description, location, owner_id, criteria, target_date")
     .eq("id", project_id)
     .single();
 
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
 
   let analysis: Awaited<ReturnType<typeof analyzeBids>>;
   try {
-    analysis = await analyzeBids(promptInputs, projectDescription, project.criteria ?? null);
+    analysis = await analyzeBids(promptInputs, projectDescription, project.criteria ?? null, project.target_date ?? null);
   } catch {
     return NextResponse.json(
       { error: "AI analysis failed. Please try again." },

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
@@ -495,6 +495,41 @@ export type Database = {
           },
         ]
       }
+      project_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          filename: string
+          id: string
+          project_id: string
+          storage_path: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          filename: string
+          id?: string
+          project_id: string
+          storage_path: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          filename?: string
+          id?: string
+          project_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_photos_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_summaries: {
         Row: {
           id: string
@@ -526,6 +561,7 @@ export type Database = {
       }
       projects: {
         Row: {
+          banner_photo_id: string | null
           created_at: string
           criteria: string | null
           description: string | null
@@ -538,6 +574,7 @@ export type Database = {
           target_date: string | null
         }
         Insert: {
+          banner_photo_id?: string | null
           created_at?: string
           criteria?: string | null
           description?: string | null
@@ -550,6 +587,7 @@ export type Database = {
           target_date?: string | null
         }
         Update: {
+          banner_photo_id?: string | null
           created_at?: string
           criteria?: string | null
           description?: string | null
@@ -561,7 +599,15 @@ export type Database = {
           target_budget?: number | null
           target_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_banner_photo_id_fkey"
+            columns: ["banner_photo_id"]
+            isOneToOne: false
+            referencedRelation: "project_photos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_notes: {
         Row: {

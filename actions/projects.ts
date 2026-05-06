@@ -177,6 +177,8 @@ export async function getProjectById(
     .select(
       `
       *,
+      banner_photo:project_photos!projects_banner_photo_id_fkey ( id, storage_path ),
+      project_photos!project_photos_project_id_fkey ( id, filename, storage_path, caption, created_at ),
       collaborators:project_collaborators (
         *,
         users ( full_name, email, avatar_url )
@@ -209,6 +211,10 @@ export async function getProjectById(
       ),
       bid_count: bids.length,
       bids,
+      banner_photo_id: data.banner_photo_id ?? null,
+      banner_photo: (data.banner_photo as unknown as ProjectWithMeta["banner_photo"]) ?? null,
+      project_photos: ((data.project_photos as unknown as ProjectWithMeta["project_photos"]) ?? [])
+        .sort((a, b) => a.created_at.localeCompare(b.created_at)),
     },
   };
 }

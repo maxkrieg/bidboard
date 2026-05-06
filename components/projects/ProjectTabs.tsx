@@ -10,7 +10,8 @@ import { CollaboratorsTab } from "./CollaboratorsTab";
 import { BidsTab } from "./BidsTab";
 import { MessagesTab } from "@/components/messages/MessagesTab";
 import { ActivityTimeline } from "./ActivityTimeline";
-import type { ProjectWithMeta, BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor } from "@/types";
+import { ProjectPhotosTab } from "./ProjectPhotosTab";
+import type { ProjectWithMeta, BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor, ProjectPhoto } from "@/types";
 
 interface ProjectTabsProps {
   project: ProjectWithMeta;
@@ -21,6 +22,7 @@ interface ProjectTabsProps {
   initialMessages: MessageWithAuthor[];
   initialActivity: ActivityLogWithActor[];
   currentUserId: string;
+  photos: ProjectPhoto[];
 }
 
 export function ProjectTabs({
@@ -32,6 +34,7 @@ export function ProjectTabs({
   initialMessages,
   initialActivity,
   currentUserId,
+  photos,
 }: ProjectTabsProps) {
   return (
     <Tabs defaultValue="bids">
@@ -47,6 +50,12 @@ export function ProjectTabs({
             className="rounded-md px-4 py-1.5 text-sm font-medium transition-all text-zinc-500 hover:text-zinc-700 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-zinc-900 data-[state=active]:font-semibold"
           >
             Messages
+          </TabsTrigger>
+          <TabsTrigger
+            value="photos"
+            className="rounded-md px-4 py-1.5 text-sm font-medium transition-all text-zinc-500 hover:text-zinc-700 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-zinc-900 data-[state=active]:font-semibold"
+          >
+            Photos
           </TabsTrigger>
           <TabsTrigger
             value="collaborators"
@@ -76,6 +85,15 @@ export function ProjectTabs({
           projectId={project.id}
           initialMessages={initialMessages}
           currentUserId={currentUserId}
+        />
+      </TabsContent>
+
+      <TabsContent value="photos" className="">
+        <ProjectPhotosTab
+          photos={photos}
+          isOwner={isOwner}
+          projectId={project.id}
+          bannerPhotoId={project.banner_photo_id ?? null}
         />
       </TabsContent>
 

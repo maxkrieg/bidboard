@@ -106,10 +106,22 @@ export interface BidWithMeta extends Bid {
   ratings: BidRatingWithUser[];
 }
 
+export interface ProjectPhoto {
+  id: string;
+  project_id: string;
+  filename: string;
+  storage_path: string;
+  caption: string | null;
+  created_at: string;
+}
+
 export interface ProjectWithMeta extends Project {
   collaborators: CollaboratorWithUser[];
   bid_count: number;
   bids: BidWithMeta[];
+  banner_photo_id: string | null;
+  banner_photo: { id: string; storage_path: string } | null;
+  project_photos: ProjectPhoto[];
 }
 
 export interface BidAnalysisBid {

@@ -8,7 +8,12 @@ import { NotesDrawer } from "@/components/notes/NotesDrawer";
 import Link from "next/link";
 import { ChevronLeft, Pencil, MapPin, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor, ProjectSummaryRecord } from "@/types";
+import type { BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor, ProjectSummaryRecord, ProjectPhoto } from "@/types";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+function bannerUrl(storagePath: string) {
+  return `${SUPABASE_URL}/storage/v1/object/public/project-photos/${storagePath}`;
+}
 
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("en-US", {
@@ -82,6 +87,15 @@ export default async function ProjectPage({
 
       {/* Project header card */}
       <div className="rounded-xl border border-zinc-200 bg-white shadow-[var(--shadow-card)] px-6 py-5 mb-6">
+        {result.data.banner_photo && (
+          <div className="-mx-6 -mt-5 mb-5 h-52 rounded-t-xl overflow-hidden">
+            <img
+              src={bannerUrl(result.data.banner_photo.storage_path)}
+              alt="Project banner"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 flex-1">
             <h1 className="text-[26px] font-bold text-zinc-900 tracking-tight leading-tight">
@@ -172,6 +186,7 @@ export default async function ProjectPage({
         initialMessages={(initialMessages ?? []) as MessageWithAuthor[]}
         initialActivity={(initialActivity ?? []) as ActivityLogWithActor[]}
         currentUserId={user?.id ?? ""}
+        photos={(result.data.project_photos ?? []) as ProjectPhoto[]}
       />
     </div>
   );
