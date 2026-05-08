@@ -57,7 +57,7 @@ ${bid.line_items.map((li) => `- ${li.description}: ${li.quantity} ${li.unit ?? "
 Please analyze these bids and respond ONLY with a valid JSON object matching this exact structure — no preamble, no markdown, no explanation outside the JSON:
 
 {
-  "summary": "A 2-4 sentence plain-English comparison of the bids overall. Focus on meaningful differences in price, scope, and timeline.",
+  "summary": "A 2-4 sentence plain-English comparison of the bids overall. Focus on meaningful differences in price, scope, and value.",
   "bids": [
     {
       "bid_id": "<bid_id>",
@@ -79,6 +79,8 @@ Scoring guidelines (score field, integer 1–5):
 Return the bids array sorted from highest score to lowest.
 
 Guidelines:
+- Focus evaluation on price, scope, completeness, and stated criteria — do not penalize or reward bids based on timeline or expiry dates
+- Each of highlights, red_flags, and questions must contain no more than 3 items
 - Red flags should be specific and actionable (e.g. "No mention of permit costs" not "Missing items")
 - Flag as a red flag any criterion that a bid clearly does not meet
 - Highlights should note genuinely positive aspects including criteria that are explicitly addressed
