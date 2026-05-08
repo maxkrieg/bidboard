@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
-const from = process.env.FROM_EMAIL!;
+const from = `BidBoard <${process.env.FROM_EMAIL!}>`;
 const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function sendInviteEmail(
