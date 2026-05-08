@@ -13,6 +13,7 @@ import {
   updatePhotoCaption,
 } from "@/actions/project-photos";
 import { createClient } from "@/lib/supabase/client";
+import { useLoadingToast } from "@/components/shared/LoadingToast";
 import type { ProjectPhoto } from "@/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -103,6 +104,7 @@ interface Props {
 
 export function ProjectPhotosTab({ photos, isOwner, projectId, bannerPhotoId }: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const { showLoading, hideLoading } = useLoadingToast();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -128,28 +130,38 @@ export function ProjectPhotosTab({ photos, isOwner, projectId, bannerPhotoId }: 
       return;
     }
 
+    showLoading();
     startTransition(async () => {
-      const urlResult = await createPhotoUploadUrl(projectId, file.name, file.type);
-      if (!urlResult.success) { alert(urlResult.error); return; }
+      try {
+        const urlResult = await createPhotoUploadUrl(projectId, file.name, file.type);
+        if (!urlResult.success) { alert(urlResult.error); return; }
 
-      const { storagePath, token } = urlResult.data;
-      const { error: uploadError } = await createClient()
-        .storage.from("project-photos")
-        .uploadToSignedUrl(storagePath, token, file);
-      if (uploadError) { alert("Upload failed."); return; }
+        const { storagePath, token } = urlResult.data;
+        const { error: uploadError } = await createClient()
+          .storage.from("project-photos")
+          .uploadToSignedUrl(storagePath, token, file);
+        if (uploadError) { alert("Upload failed."); return; }
 
-      const result = await recordPhotoUpload(projectId, storagePath, file.name);
-      if (!result.success) { alert(result.error); return; }
+        const result = await recordPhotoUpload(projectId, storagePath, file.name);
+        if (!result.success) { alert(result.error); return; }
 
-      router.refresh();
+        router.refresh();
+      } finally {
+        hideLoading();
+      }
     });
   };
 
   const handleDelete = (photoId: string) => {
     if (!confirm("Delete this photo?")) return;
+    showLoading();
     startTransition(async () => {
-      await deleteProjectPhoto(photoId);
-      router.refresh();
+      try {
+        await deleteProjectPhoto(photoId);
+        router.refresh();
+      } finally {
+        hideLoading();
+      }
     });
   };
 
@@ -169,35 +181,37 @@ export function ProjectPhotosTab({ photos, isOwner, projectId, bannerPhotoId }: 
 
   if (photos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
-        {isOwner && (
-          <>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={isPending}
-              onClick={() => fileInputRef.current?.click()}
-              className="mb-6"
-            >
-              <Upload size={14} className="mr-1.5" />
-              Upload Photo
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="hidden"
-              onChange={handleUpload}
-            />
-          </>
-        )}
-        <Camera size={36} className="mb-3" />
-        <p className="text-sm font-medium text-zinc-500">No photos yet</p>
-        {isOwner && (
-          <p className="text-xs mt-1">Upload photos to document your project.</p>
-        )}
-      </div>
+      <>
+        <div className="flex flex-col items-center justify-center py-20 text-zinc-400">
+          {isOwner && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPending}
+                onClick={() => fileInputRef.current?.click()}
+                className="mb-6"
+              >
+                <Upload size={14} className="mr-1.5" />
+                Upload Photo
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleUpload}
+              />
+            </>
+          )}
+          <Camera size={36} className="mb-3" />
+          <p className="text-sm font-medium text-zinc-500">No photos yet</p>
+          {isOwner && (
+            <p className="text-xs mt-1">Upload photos to document your project.</p>
+          )}
+        </div>
+      </>
     );
   }
 

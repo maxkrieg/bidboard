@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NotificationBell } from "@/components/shared/NotificationBell";
 import { UserMenu } from "@/components/shared/UserMenu";
+import { LoadingToastProvider } from "@/components/shared/LoadingToast";
 import type { Notification } from "@/types";
 
 export default async function AppLayout({
@@ -43,6 +44,7 @@ export default async function AppLayout({
   const unreadCount = typedNotifications.filter((n) => !n.read).length;
 
   return (
+    <LoadingToastProvider>
     <div className="min-h-screen bg-zinc-50">
       <header className="h-14 sticky top-0 z-40 border-b border-zinc-200 bg-white">
         <div className="mx-auto max-w-7xl px-6 h-full flex items-center justify-between">
@@ -69,5 +71,6 @@ export default async function AppLayout({
       </header>
       <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
     </div>
+    </LoadingToastProvider>
   );
 }
