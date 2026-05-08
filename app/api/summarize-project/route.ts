@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   const { data: bids } = await admin
     .from("bids")
     .select(
-      "total_price, status, contractor:contractors(name), ratings:bid_ratings(rating)"
+      "total_price, status, estimated_days, expiry_date, notes, contractor:contractors(name), ratings:bid_ratings(rating), line_items:bid_line_items(description, quantity, unit, unit_price)"
     )
     .eq("project_id", project_id);
 
@@ -54,11 +54,22 @@ export async function POST(request: Request) {
               (ratings.reduce((s, r) => s + r.rating, 0) / ratings.length) * 10
             ) / 10
           : null;
+      const lineItems = (b.line_items as { description: string; quantity: number; unit: string | null; unit_price: number }[]) ?? [];
       return {
         contractor_name: (b.contractor as { name: string }).name,
         total_price: b.total_price,
         status: b.status,
         avg_rating: avg,
+        estimated_days: b.estimated_days,
+        expiry_date: b.expiry_date,
+        notes: b.notes,
+        line_items: lineItems.map((li) => ({
+          description: li.description,
+          quantity: li.quantity,
+          unit: li.unit,
+          unit_price: li.unit_price,
+          total_price: li.quantity * li.unit_price,
+        })),
       };
     }),
   };

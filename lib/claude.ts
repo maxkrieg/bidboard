@@ -190,6 +190,10 @@ export interface ProjectSummaryInput {
     total_price: number;
     status: string;
     avg_rating: number | null;
+    estimated_days: number | null;
+    expiry_date: string | null;
+    notes: string | null;
+    line_items: BidLineItemInput[];
   }>;
 }
 
@@ -208,11 +212,26 @@ const PROJECT_SUMMARY_PROMPT = (input: ProjectSummaryInput): string => {
     input.bids.length === 0
       ? "No bids received yet."
       : input.bids
-          .map(
-            (b) =>
-              `- ${b.contractor_name}: $${b.total_price.toLocaleString()} (${b.status})${b.avg_rating ? ` [rated ${b.avg_rating}/5]` : ""}`
-          )
-          .join("\n");
+          .map((b) => {
+            const lines = [
+              `Contractor: ${b.contractor_name}`,
+              `Total Price: $${b.total_price.toLocaleString()}`,
+              `Status: ${b.status}${b.avg_rating ? ` (team rating: ${b.avg_rating}/5)` : ""}`,
+              `Duration: ${b.estimated_days ? b.estimated_days + " days" : "Not specified"}`,
+              `Expiry: ${b.expiry_date ?? "Not specified"}`,
+              `Notes: ${b.notes ?? "None"}`,
+            ];
+            if (b.line_items.length > 0) {
+              lines.push(
+                "Line Items:\n" +
+                  b.line_items
+                    .map((li) => `  - ${li.description}: ${li.quantity} ${li.unit ?? ""} @ $${li.unit_price} = $${li.total_price}`)
+                    .join("\n")
+              );
+            }
+            return lines.join("\n");
+          })
+          .join("\n\n---\n\n");
 
   const todayStr = new Date().toISOString().split("T")[0];
 
