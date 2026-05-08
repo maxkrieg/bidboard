@@ -6,11 +6,13 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, X, Camera, Upload, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  uploadProjectPhoto,
+  createPhotoUploadUrl,
+  recordPhotoUpload,
   deleteProjectPhoto,
   setBannerPhoto,
   updatePhotoCaption,
 } from "@/actions/project-photos";
+import { createClient } from "@/lib/supabase/client";
 import type { ProjectPhoto } from "@/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -119,11 +121,26 @@ export function ProjectPhotosTab({ photos, isOwner, projectId, bannerPhotoId }: 
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = "";
-    const fd = new FormData();
-    fd.append("photo", file);
+
+    if (file.size > 20 * 1024 * 1024) { alert("File exceeds 20 MB limit."); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      alert("Only JPEG, PNG, and WebP images are allowed.");
+      return;
+    }
+
     startTransition(async () => {
-      const result = await uploadProjectPhoto(projectId, fd);
-      if (!result.success) alert(result.error);
+      const urlResult = await createPhotoUploadUrl(projectId, file.name, file.type);
+      if (!urlResult.success) { alert(urlResult.error); return; }
+
+      const { storagePath, token } = urlResult.data;
+      const { error: uploadError } = await createClient()
+        .storage.from("project-photos")
+        .uploadToSignedUrl(storagePath, token, file);
+      if (uploadError) { alert("Upload failed."); return; }
+
+      const result = await recordPhotoUpload(projectId, storagePath, file.name);
+      if (!result.success) { alert(result.error); return; }
+
       router.refresh();
     });
   };
