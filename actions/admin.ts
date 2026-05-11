@@ -4,10 +4,8 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendAccessApprovedEmail } from "@/lib/resend";
 import type { ActionResult } from "@/types";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 async function assertAdmin(): Promise<string> {
   const supabase = await createServerClient();
@@ -20,15 +18,9 @@ async function assertAdmin(): Promise<string> {
   return user.id;
 }
 
-export async function approveUser(userId: string): Promise<void> {
+export async function enableUser(userId: string): Promise<void> {
   await assertAdmin();
   const admin = createAdminClient();
-
-  const { data: profile } = await admin
-    .from("users")
-    .select("email")
-    .eq("id", userId)
-    .single();
 
   const { error } = await admin
     .from("users")
@@ -36,14 +28,10 @@ export async function approveUser(userId: string): Promise<void> {
     .eq("id", userId);
   if (error) throw new Error(error.message);
 
-  if (profile) {
-    await sendAccessApprovedEmail(profile.email, siteUrl);
-  }
-
   revalidatePath("/admin");
 }
 
-export async function rejectUser(userId: string): Promise<void> {
+export async function disableUser(userId: string): Promise<void> {
   await assertAdmin();
   const admin = createAdminClient();
 

@@ -27,7 +27,6 @@ export default async function AppLayout({
       .select("status")
       .eq("id", user.id)
       .single();
-    if (profile?.status === "pending") redirect("/pending");
     if (profile?.status === "rejected") redirect("/rejected");
   }
 

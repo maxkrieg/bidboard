@@ -20,7 +20,6 @@ export default async function RejectedPage() {
     .single();
 
   if (profile?.status === "approved") redirect("/dashboard");
-  if (profile?.status === "pending") redirect("/pending");
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-zinc-50 p-8">
@@ -51,11 +50,11 @@ export default async function RejectedPage() {
           </div>
 
           <h1 className="text-xl font-semibold text-zinc-900 mb-2">
-            Access request declined
+            Account disabled
           </h1>
           <p className="text-sm text-zinc-500 mb-6">
-            Unfortunately your access request was not approved. If you believe
-            this is a mistake, please contact the administrator.
+            Your account has been disabled by the administrator. If you believe
+            this is a mistake, please contact the admin.
           </p>
 
           <form action={signOut}>

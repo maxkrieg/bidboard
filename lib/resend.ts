@@ -1,7 +1,7 @@
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
-const from = `BidBoard <${process.env.FROM_EMAIL!}>`;
+const from = process.env.FROM_EMAIL!;
 const appUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export async function sendInviteEmail(
@@ -12,7 +12,6 @@ export async function sendInviteEmail(
 ): Promise<void> {
   const inviteUrl = `${appUrl}/invite?token=${token}`;
   try {
-    console.log("[resend] sendInviteEmail to:", to, "inviteUrl:", inviteUrl);
     const result = await resend.emails.send({
       from,
       to,
@@ -25,7 +24,9 @@ export async function sendInviteEmail(
         <p>If you weren't expecting this invitation, you can ignore this email.</p>
       `,
     });
-    console.log("[resend] sendInviteEmail result:", result);
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
     console.error("[resend] sendInviteEmail error:", err);
   }
@@ -41,7 +42,7 @@ export async function sendBidAddedEmail(
 ): Promise<void> {
   if (to.length === 0) return;
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from,
       to,
       subject: `New bid added to "${projectName}"`,
@@ -50,6 +51,9 @@ export async function sendBidAddedEmail(
         <p><a href="${bidUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">View Bid</a></p>
       `,
     });
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
     console.error("[resend] sendBidAddedEmail error:", err);
   }
@@ -64,7 +68,7 @@ export async function sendCommentAddedEmail(
 ): Promise<void> {
   if (to.length === 0) return;
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from,
       to,
       subject: `New comment on "${projectName}"`,
@@ -74,6 +78,9 @@ export async function sendCommentAddedEmail(
         <p><a href="${commentUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">View Comment</a></p>
       `,
     });
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
     console.error("[resend] sendCommentAddedEmail error:", err);
   }
@@ -88,7 +95,7 @@ export async function sendMessageAddedEmail(
 ): Promise<void> {
   if (to.length === 0) return;
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from,
       to,
       subject: `New message in "${projectName}"`,
@@ -98,29 +105,35 @@ export async function sendMessageAddedEmail(
         <p><a href="${projectUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">View Messages</a></p>
       `,
     });
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
     console.error("[resend] sendMessageAddedEmail error:", err);
   }
 }
 
-export async function sendAccessRequestEmail(
+export async function sendNewUserSignupEmail(
   adminEmail: string,
-  requesterEmail: string,
+  newUserEmail: string,
   adminUrl: string
 ): Promise<void> {
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from,
       to: adminEmail,
-      subject: `New access request on BidBoard`,
+      subject: `New user signed up for BidBoard`,
       html: `
-        <p>A new user has requested access to BidBoard.</p>
-        <p><strong>Email:</strong> ${requesterEmail}</p>
-        <p><a href="${adminUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Review in Admin Panel</a></p>
+        <p>A new user has signed up for BidBoard.</p>
+        <p><strong>Email:</strong> ${newUserEmail}</p>
+        <p><a href="${adminUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">View in Admin Panel</a></p>
       `,
     });
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
-    console.error("[resend] sendAccessRequestEmail error:", err);
+    console.error("[resend] sendNewUserSignupEmail error:", err);
   }
 }
 
@@ -129,7 +142,7 @@ export async function sendAccessApprovedEmail(
   siteUrl: string
 ): Promise<void> {
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from,
       to,
       subject: `Your BidBoard access has been approved`,
@@ -138,6 +151,9 @@ export async function sendAccessApprovedEmail(
         <p><a href="${siteUrl}/login" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Sign in to BidBoard</a></p>
       `,
     });
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
     console.error("[resend] sendAccessApprovedEmail error:", err);
   }
@@ -150,7 +166,7 @@ export async function sendAnalysisReadyEmail(
 ): Promise<void> {
   if (to.length === 0) return;
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from,
       to,
       subject: `AI analysis ready for "${projectName}"`,
@@ -159,6 +175,9 @@ export async function sendAnalysisReadyEmail(
         <p><a href="${projectUrl}" style="background:#4f46e5;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">View Analysis</a></p>
       `,
     });
+    if (result.error) {
+      throw new Error(`Error ${result.error.statusCode}: ${result.error.message}`);
+    }
   } catch (err) {
     console.error("[resend] sendAnalysisReadyEmail error:", err);
   }
