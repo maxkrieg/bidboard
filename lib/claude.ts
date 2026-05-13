@@ -41,7 +41,7 @@ Here are the bids submitted for this project:
 ${bids
   .map(
     (bid, i) => `
-BID ${i + 1}
+BID ${i + 1} [ID: ${bid.bid_id}]
 Contractor: ${bid.contractor_name}
 Total Price: $${bid.total_price}
 Estimated Duration: ${bid.estimated_days ? bid.estimated_days + " days" : "Not specified"}
@@ -60,7 +60,7 @@ Please analyze these bids and respond ONLY with a valid JSON object matching thi
   "summary": "A 2-4 sentence plain-English comparison of the bids overall. Focus on meaningful differences in price, scope, and value.",
   "bids": [
     {
-      "bid_id": "<bid_id>",
+      "bid_id": "<copy the exact ID from the bid header>",
       "contractor_name": "<name>",
       "score": <1-5 integer>,
       "highlights": ["<positive aspect 1>", "<positive aspect 2>"],
