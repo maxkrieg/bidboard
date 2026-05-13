@@ -6,7 +6,7 @@ import { ArchiveDropdown } from "@/components/projects/ArchiveDropdown";
 import { ProjectSummaryBanner } from "@/components/projects/ProjectSummaryBanner";
 import { NotesDrawer } from "@/components/notes/NotesDrawer";
 import Link from "next/link";
-import { ChevronLeft, Pencil, MapPin, DollarSign, Calendar } from "lucide-react";
+import { ChevronLeft, Pencil, MapPin, DollarSign, Calendar, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { BidAnalysisRecord, MessageWithAuthor, ActivityLogWithActor, ProjectSummaryRecord, ProjectPhoto } from "@/types";
 
@@ -38,6 +38,7 @@ export default async function ProjectPage({
   } = await supabase.auth.getUser();
 
   const isOwner = user?.id === result.data.owner_id;
+  const hasAcceptedBid = result.data.bids.some((b) => b.status === "accepted");
 
   // Fetch owner's profile for the collaborators tab
   const { data: ownerProfile } = await supabase
@@ -120,6 +121,12 @@ export default async function ProjectPage({
                     day: "numeric",
                     year: "numeric",
                   })}
+                </span>
+              )}
+              {hasAcceptedBid && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white">
+                  <CheckCircle size={11} />
+                  Bid accepted
                 </span>
               )}
             </div>

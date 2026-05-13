@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MapPin, Calendar, DollarSign } from "lucide-react";
+import { MapPin, Calendar, DollarSign, CheckCircle } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -12,6 +12,7 @@ import type { Project } from "@/types";
 interface ProjectCardProps {
   project: Project & {
     bid_count: number;
+    has_accepted_bid?: boolean;
   };
   isOwner?: boolean;
   bannerUrl?: string;
@@ -38,9 +39,17 @@ export function ProjectCard({ project, isOwner = true, bannerUrl }: ProjectCardP
             <CardTitle className="text-[15px] font-semibold text-zinc-900 leading-tight">
               {project.name}
             </CardTitle>
-            <Badge className="shrink-0 text-xs bg-indigo-600 text-white hover:bg-indigo-600 border-0 font-medium tabular-nums">
-              {project.bid_count} {project.bid_count === 1 ? "bid" : "bids"}
-            </Badge>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Badge className="text-xs bg-indigo-600 text-white hover:bg-indigo-600 border-0 font-medium tabular-nums">
+                {project.bid_count} {project.bid_count === 1 ? "bid" : "bids"}
+              </Badge>
+              {project.has_accepted_bid && (
+                <Badge className="text-xs bg-emerald-600 text-white hover:bg-emerald-600 border-0 font-medium">
+                  <CheckCircle size={11} className="mr-1" />
+                  Bid accepted
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-1.5 text-sm text-zinc-500">

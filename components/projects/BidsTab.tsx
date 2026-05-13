@@ -13,6 +13,12 @@ interface BidsTabProps {
 }
 
 export function BidsTab({ projectId, bids, initialAnalysis, isOwner }: BidsTabProps) {
+  const sortedBids = [...bids].sort((a, b) => {
+    if (a.status === "accepted" && b.status !== "accepted") return -1;
+    if (b.status === "accepted" && a.status !== "accepted") return 1;
+    return 0;
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -60,7 +66,7 @@ export function BidsTab({ projectId, bids, initialAnalysis, isOwner }: BidsTabPr
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {bids.map((bid) => (
+          {sortedBids.map((bid) => (
             <BidCard key={bid.id} bid={bid} />
           ))}
         </div>

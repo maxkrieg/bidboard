@@ -20,7 +20,7 @@ export default async function DashboardPage() {
 
   const { data: projects } = await supabase
     .from("projects")
-    .select("*, bids(id), banner_photo:project_photos!projects_banner_photo_id_fkey(storage_path)")
+    .select("*, bids(id, status), banner_photo:project_photos!projects_banner_photo_id_fkey(storage_path)")
     .order("created_at", { ascending: false });
 
   const allProjects = projects ?? [];
@@ -62,6 +62,7 @@ export default async function DashboardPage() {
                   ...project,
                   status: project.status as "active" | "archived",
                   bid_count: project.bids?.length ?? 0,
+                  has_accepted_bid: project.bids?.some((b: { status: string }) => b.status === "accepted") ?? false,
                 }}
                 isOwner
                 bannerUrl={
@@ -89,6 +90,7 @@ export default async function DashboardPage() {
                   ...project,
                   status: project.status as "active" | "archived",
                   bid_count: project.bids?.length ?? 0,
+                  has_accepted_bid: project.bids?.some((b: { status: string }) => b.status === "accepted") ?? false,
                 }}
                 isOwner={false}
                 bannerUrl={

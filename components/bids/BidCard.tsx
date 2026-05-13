@@ -22,7 +22,7 @@ function isExpiringSoon(expiry: string | null): boolean {
 }
 
 function statusAccentClass(status: string): string {
-  if (status === "accepted") return "bg-indigo-500";
+  if (status === "accepted") return "bg-emerald-500";
   if (status === "rejected") return "bg-red-400";
   return "bg-amber-400";
 }
